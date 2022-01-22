@@ -8,86 +8,9 @@ import pygame
 import os
 from sys import exit
 from pygame.locals import *
-
-# Enemy spaceship class, inherits pygame.sprite.Sprite
-class Enemy(pygame.sprite.Sprite):
-    def __init__(self, screenWidth, screenHeight, width, height, startingHealth, currentHealth, fireRate, weaponType, shipType, startPosX, 
-    startPosY, moveRate, baseDamage = 1, lastAttackTime = None):
-        super().__init__()
-        self.LEFT = 'left'                              # constant to check the direction the enemy ship is moving
-        self.RIGHT = 'right'                            # constant to check the direction the enemy ship is moving
-        self.screenWidth = screenWidth                  # width of the game screen
-        self.screenHeight = screenHeight                # height of the game screen
-        self.width = width                              # the width of the enemy spaceship 
-        self.height = height                            # the height of the enemy spaceship
-        self.startingHealth = startingHealth            # starting health value of the enemy spaceship
-        self.currentHealth = currentHealth              # current health value of the enemy spaceship
-        self.fireRate = fireRate                        # the rate at which the enemy ship can attack
-        self.weaponType = weaponType                    # the type of weapon equipped by enemy spaceship
-        self.shipType = shipType                        # the type of spaceship
-        self.startPosX = startPosX                      # starting x coordinate of the enemy spaceship
-        self.startPosY = startPosY                      # starting y coordinate of the enemy spaceship
-        self.currentPosX = self.startPosX               # current x coordinate of the enemy spaceship
-        self.currentPosY = self.startPosY               # current y coordinate  of the enemy spaceship
-        self.moveRate = moveRate                        # the speed at which the enemy spaceship moves along the x axis
-        self.baseDamage = baseDamage                    # the base damage of the enemy spaceship; impacted by damage multipliers
-        self.lastAttackTime = lastAttackTime            # the time of the last attack, used to see if another attack can be made
-        self.moveDirection = self.LEFT                  # indicates the direction the enemy spaceship is moving, left or right
-        
-        # Create the graphics for the enemy spaceship
-        self.image = pygame.image.load(os.path.join('assets\ships', 'moroder.png'))
-        self.image = pygame.transform.scale(self.image, (self.width, self.height))
-        self.rect = self.image.get_rect()
-        self.rect.center = (self.currentPosX, self.currentPosY)
-
-    # Override the sprit.update method to control automate the movement of the enemy spaceship
-    def update(self):
-        if self.moveDirection == self.LEFT and self.currentPosX - self.image.get_width() / 2 > 10:
-            self.currentPosX -= self.moveRate
-            self.rect.center = (self.currentPosX, self.currentPosY)
-        elif self.moveDirection == self.LEFT and self.currentPosX - self.image.get_width() / 2 <= 10:
-            self.moveDirection = self.RIGHT
-        elif self.moveDirection == self.RIGHT and self.currentPosX + self.image.get_width() / 2 < self.screenWidth - 10:
-            self.currentPosX += self.moveRate
-            self.rect.center = (self.currentPosX, self.currentPosY)
-        elif self.moveDirection == self.RIGHT and self.currentPosX + self.image.get_width() / 2 >= self.screenWidth - 10:
-            self.moveDirection = self.LEFT
-
-
-# Player starship class, inherits pygame.sprite.Sprite
-class Starship(pygame.sprite.Sprite):
-    def __init__(self, width, height, startingHealth, currentHealth, fireRate, weaponType, shipType, startPosX, 
-    startPosY, currentPosX, baseDamage, shieldType, lastAttackTime = None):
-        super().__init__()
-        self.LEFT = 'left'
-        self.RIGHT = 'right'
-        self.width = width                              # the width of the player starship
-        self.height = height                            # the height of the player starship
-        self.startingHealth = startingHealth            # starting health value of the player starship
-        self.currentHealth = currentHealth              # current health value of the player starship
-        self.fireRate = fireRate                        # the rate at which the player ship can attack
-        self.weaponType = weaponType                    # the type of weapon equipped by the player starship
-        self.shipType = shipType                        # the type of starship
-        self.startPosX = currentPosX                    # starting x coordinate of the player starship
-        self.startPosY = startPosY                      # starting y coordinate of the player starship
-        self.currentPosX = self.startPosX               # current x coordinate position of the player starship
-        self.baseDamage = baseDamage                    # the base damage of the player starship; impacted by damage multipliers
-        self.shieldType = shieldType                    # the type of shield equipped by the player starship
-        self.lastAttackTime = lastAttackTime            # the time of the last attack, used to see if another attack can be made
-
-        # Create the graphics for the player starship
-        self.image = pygame.image.load(os.path.join('assets\ships', 'skyBlanc.png'))
-        self.image = pygame.transform.scale(self.image, (self.width, self.height))
-        self.rect = self.image.get_rect()
-        self.rect.center = (self.currentPosX, self.startPosY)
-
-    def update(self, direction):
-        if direction == self.LEFT:
-            self.currentPosX -= 5
-            self.rect.center = (self.currentPosX, self.startPosY)
-        elif direction == self.RIGHT:
-            self.currentPosX += 5
-            self.rect.center = (self.currentPosX, self.startPosY)
+from enemy import *
+from starship import *
+from projectile import *
 
 # Main game function
 def main():
@@ -100,11 +23,17 @@ def main():
     SCREEN_HEIGHT = 900                 # height of the screen area
     FPS = 60                            # maximum frames per second (FPS)
     FPSCLOCK = pygame.time.Clock()      # clock object to control the maximum FPS
-    LEFT = 'left'
-    RIGHT = 'right'
+    LEFT = 'left'                       # movement direction for player starship
+    RIGHT = 'right'                     # movement direction for player starship
+    STARSHIP_SIZE = 100                 # player starship height and width
+    ENEMY_SIZE = 100                    # enemy spaceship height and width
+    LASER_WIDTH = 50                    # width of the player starship laser 
+    LASER_HEIGHT = 100                  # height of the player starship laser
 
     # Declare variables
     enemySpeed = 2                      # enemy ship starting speed, impacted by multipliers
+    isLaser = False
+    isEnemy = False
     
     # Create the game display area, assign it to the SCREEN constant, and apply the background image
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -113,14 +42,19 @@ def main():
     BG_IMAGE = pygame.transform.scale(BG_IMAGE, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
     # create enemy spaceship object
-    enemy = Enemy(SCREEN_WIDTH, SCREEN_HEIGHT, 100, 100, 10, 10, 5, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 0.5), enemySpeed, True)
+    enemy = Enemy(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, ENEMY_SIZE, 10, 10, 5, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 0.5), enemySpeed, True)
     enemy_group = pygame.sprite.Group()
     enemy_group.add(enemy)
 
+    # Create bombs for enemy spaceship
+
     # create player starship object
-    starship = Starship(100, 100, 100, 100, 10, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 7.5), 10, 10, 'ion')
+    starship = Starship(SCREEN_WIDTH, SCREEN_HEIGHT, STARSHIP_SIZE, STARSHIP_SIZE, 100, 100, 10, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 7.5), 10, 10, 'ion')
     starship_group = pygame.sprite.Group()
     starship_group.add(starship)
+
+    # Create a group to hold projectile objects
+    projectile_group = pygame.sprite.Group()
 
     # Game loop
     while True:
@@ -134,6 +68,35 @@ def main():
         # Draw background image
         SCREEN.blit(BG_IMAGE, (0, 0))
 
+        # Create laser object if spacebar is pressed
+        for event in pygame.event.get(KEYUP):
+            if event.key == K_SPACE:
+                if isLaser == False:
+                    starshipPosX, starshipPosY = starship.GetStarshipPosition()
+                    laser = Projectile(SCREEN_WIDTH, SCREEN_HEIGHT, starshipPosX, starshipPosY)
+                    projectile_group.add(laser)
+                    projectile_group.draw(SCREEN)
+                    isLaser = True
+            else:
+                pygame.event.post(event)
+        if isLaser == True:
+            assert laser in projectile_group, 'projectile group is empty'
+            projectile_group.draw(SCREEN)
+            laser.update()
+            if laser.positionY < - 100:
+                isLaser = False
+            elif pygame.sprite.spritecollide(laser, enemy_group, True):
+                laser.kill()
+                isLaser = False
+
+        if enemy in enemy_group and isEnemy == False:
+            isEnemy = True
+        elif not enemy in enemy_group and isEnemy == True:
+            isEnemy = False
+            enemy = Enemy(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, ENEMY_SIZE, 10, 10, 5, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 0.5), enemySpeed, True)
+            enemy_group = pygame.sprite.Group()
+            enemy_group.add(enemy)
+     
         # Draw spaceship groups
         enemy_group.draw(SCREEN)
         starship_group.draw(SCREEN)
