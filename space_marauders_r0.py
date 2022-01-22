@@ -5,6 +5,7 @@
 # Image assets credit to: https://github.com/exewin https://exewin.github.io/
 
 import pygame
+import os
 from sys import exit
 from pygame.locals import *
 
@@ -28,7 +29,7 @@ class Enemy(pygame.sprite.Sprite):
         
         # Create the graphics for the enemy spaceship
         self.image = pygame.Surface((self.width, self.height))
-        self.image = pygame.image.load('assets/moroder.png', self.image)
+        self.image = pygame.image.load(os.path.join('assets', 'moroders.png'))
         self.rect = self.image.get_rect()
         self.rect.center = (startPosX, StartPosY)
 
