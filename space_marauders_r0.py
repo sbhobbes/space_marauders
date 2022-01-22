@@ -1,23 +1,34 @@
-import pygame, sys
+# Author: Seth Hobbes
+# Company: Springboro Technologies, LLC DBA Monarch Technologies
+# Date: 1/20/2022
+# Property of Seth Hobbes, member of Monarch Technologies, all rights reserved
+# Image assets credit to: https://github.com/exewin https://exewin.github.io/
+
+import pygame
+from sys import exit
 from pygame.locals import *
 
+# Enemy spaceship class, inherits pygame.sprite.Sprite
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, width, height, color, startingHealth, currentHealth, fireRate, weaponType, shipType, startPosX, 
-    StartPosY, currentPosX, currentPosY, descentRate, baseDamage = 1, lastAttackTime = None):
+    StartPosY, currentPosX, currentPosY, moveRate, baseDamage = 1, lastAttackTime = None):
         super().__init__()
-        self.startingHealth = startingHealth
-        self.currentHealth = currentHealth
-        self.fireRate = fireRate
-        self.weaponType = weaponType
-        self.shipType = shipType
-        self.currentPosX = currentPosX
-        self.currentPosY = currentPosY
-        self.descentRate = descentRate
-        self.baseDamage = baseDamage
-        self.lastAttackTime = lastAttackTime
-
-        self.image = pygame.Surface((width, height))
-        self.image.fill(color)
+        self.width = width                              # the width of the enemy spaceship 
+        self.height = height                            # the height of the enemy spaceship
+        self.startingHealth = startingHealth            # starting health value of the enemy spaceship
+        self.currentHealth = currentHealth              # current health value of the enemy spaceship
+        self.fireRate = fireRate                        # the rate at which the enemy ship can attack
+        self.weaponType = weaponType                    # the type of weapon equipped by enemy spaceship
+        self.shipType = shipType                        # the type of spaceship
+        self.currentPosX = currentPosX                  # current x coordinate position of the enemy spaceship
+        self.currentPosY = currentPosY                  # current y coordinate position of the enemy spaceship
+        self.moveRate = moveRate                        # the speed at which the enemy spaceship moves along the x axis
+        self.baseDamage = baseDamage                    # the base damage of the enemy spaceship; could be impacted by multipliers
+        self.lastAttackTime = lastAttackTime            # the time of the last attack, used to see if another attack can be made
+        
+        # Create the graphics for the enemy spaceship
+        self.image = pygame.Surface((self.width, self.height))
+        self.image = pygame.image.load('assets/moroder.png', self.image)
         self.rect = self.image.get_rect()
         self.rect.center = (startPosX, StartPosY)
 
@@ -72,19 +83,42 @@ def main():
 
     # Game loop
     while True:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                terminate()
+        
+        # Check user input for quit events and escape key
+        CheckForQuit()
 
         pygame.display.flip()
         enemy_group.draw(SCREEN)
         starship_group.draw(SCREEN)
         FPSCLOCK.tick(FPS)
 
-# Quit function
-def terminate():
-    pygame.quit()
-    sys.exit()
+# Check for quit event
+def CheckForQuit():
+    """check user inputs to see if the game should continue or terminate"""
+    
+    # Loop through all events of type QUIT
+    for event in pygame.event.get(QUIT):
 
+        # If QUIT event found, call terminate function
+        Terminate()
+
+    # Loop through keyup events to check for Esc key input
+    for event in pygame.event.get(KEYUP):
+
+        # if key up is the Esc key then call terminate function to exit game
+        if event.key == K_ESCAPE:
+            Terminate()
+
+        # if key up is not the Esc key then put it back into the event queue
+        else:
+            pygame.event.post(event)
+
+# Quit function
+def Terminate():
+    """This function quits the game and terminates code execution"""
+    pygame.quit()
+    exit()
+
+# Call main function
 if __name__ == '__main__':
     main()
