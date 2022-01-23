@@ -70,5 +70,10 @@ class Enemy(pygame.sprite.Sprite):
         elif self.moveDirection == self.RIGHT and (self.currentPosX + (self.image.get_width() / 2)) >= self.screenWidth - 10:
             self.moveDirection = self.LEFT
 
-    def GetEnemyPosition(self):
+    # method to get the current x and y position of the enemy object
+    def GetCurrentPosition(self):
         return self.currentPosX, self.startPosY
+
+    # method to get the fire rate of the enemy object
+    def GetEnemyFireRate(self):
+        return self.fireRate

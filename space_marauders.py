@@ -6,7 +6,6 @@
 
 import pygame
 import os
-import time
 from sys import exit
 from pygame.locals import *
 from enemy import *
@@ -31,15 +30,20 @@ def main():
     LASER_WIDTH = 5                     # width of the player starship laser 
     LASER_HEIGHT = 25                   # height of the player starship laser
     BOMB_SIZE = 50                      # height and width of the enemy bomb image
-    PLAYER = 'player'                   # value to pass to the projectile init function
-    ENEMY = 'enemy'                     # value to pass to the projectile init function
+    PLAYER = 'player'                   # value to pass to the projectile class call for origin point
+    ENEMY = 'enemy'                     # value to pass to the projectile class call for origin point
+    BOMB = 'bomb'                       # value to pass into the projectile class call for projectile type
+    LASER = 'laser'                     # value to pass into the projectile class call for projectile type
 
     # Declare variables
     enemySpeed = 2                      # enemy ship starting speed, impacted by multipliers
+    bombSpeed = 5                       # bomb speed starting value, impacted by multipliers
+    laserSpeed = 10                     # laser speed starting value, impacted by multipliers
+    starshipFireRate = 5000             # time in milliseconds between starship projectiles, impacted by multipliers
+    enemyFireRate = 5000                # time in milliseconds between enemy projectiles, impacted by multipliers
     isLaser = False                     # flag to check if a player projectile active on the screen or not
     isEnemy = False                     # flag to check if an enemy is present on the screen or not
-    isBomb = False
-    lastBombTime = time.time()
+    isBomb = False                      # flag to check if a bomb is present on the screen or not
     
     # Create the game display area, assign it to the SCREEN constant, and apply the background image
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -48,14 +52,12 @@ def main():
     BG_IMAGE = pygame.transform.scale(BG_IMAGE, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
     # create enemy spaceship object
-    enemy = Enemy(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, ENEMY_SIZE, 10, 10, 5, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 0.5), enemySpeed, True)
+    enemy = Enemy(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, ENEMY_SIZE, 10, 10, enemyFireRate, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 0.5), enemySpeed, True)
     enemy_group = pygame.sprite.Group()
     enemy_group.add(enemy)
 
-    # Create bombs for enemy spaceship
-
     # create player starship object
-    starship = Starship(SCREEN_WIDTH, SCREEN_HEIGHT, STARSHIP_SIZE, STARSHIP_SIZE, 100, 100, 10, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 7.5), 10, 10, 'ion')
+    starship = Starship(SCREEN_WIDTH, SCREEN_HEIGHT, STARSHIP_SIZE, STARSHIP_SIZE, 100, 100, starshipFireRate, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 7.5), 10, 10, 'ion')
     starship_group = pygame.sprite.Group()
     starship_group.add(starship)
 
@@ -77,42 +79,49 @@ def main():
         # Create laser object if spacebar is pressed
         for event in pygame.event.get(KEYUP):
             if event.key == K_SPACE:
-                if isLaser == False:
-                    starshipPosX, starshipPosY = starship.GetStarshipPosition()
-                    laser = Projectile(SCREEN_WIDTH, SCREEN_HEIGHT, starshipPosX, starshipPosY, PLAYER, projectileWidth = LASER_WIDTH, projectileHeight = LASER_HEIGHT)
+                if isLaser == False and starship in starship_group:
+                    starshipPosX, starshipPosY = starship.GetCurrentPosition()
+                    laser = Projectile(SCREEN_WIDTH, SCREEN_HEIGHT, starshipPosX, starshipPosY, PLAYER, LASER, LASER_WIDTH, LASER_HEIGHT, laserSpeed)
                     projectile_group.add(laser)
-                    projectile_group.draw(SCREEN)
                     isLaser = True
             else:
                 pygame.event.post(event)
+
+        # Check for laser existence and collision
         if isLaser == True:
-            assert laser in projectile_group, 'projectile group is empty'
-            projectile_group.draw(SCREEN)
-            if laser.positionY < - 100:
+            if laser.GetCurrentPosition()[1] < - 100:
                 isLaser = False
             elif pygame.sprite.spritecollide(laser, enemy_group, True):
                 laser.kill()
                 isLaser = False
 
+        # Check to see if new enemy should be created; will later be replaced by levels, scoring, and resets
         if enemy in enemy_group and isEnemy == False:
             isEnemy = True
         elif not enemy in enemy_group and isEnemy == True:
             isEnemy = False
-            enemy = Enemy(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, ENEMY_SIZE, 10, 10, 5, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 0.5), enemySpeed, True)
+            enemy = Enemy(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, ENEMY_SIZE, 10, 10, enemyFireRate, 'phaser', 'alpha', (SCREEN_WIDTH / 2), (SCREEN_HEIGHT / 8 * 0.5), enemySpeed, True)
             enemy_group = pygame.sprite.Group()
             enemy_group.add(enemy)
 
         # Check if enough time has passed to drop a bomb, if so, drop bomb
-        # if lastBombTime + enemy.fireRate >= time.time():
-        print(lastBombTime)
         if isBomb == False:
-            enemyPosX, enemyPosY = enemy.GetEnemyPosition()
-            bomb = Projectile(SCREEN_WIDTH, SCREEN_HEIGHT, enemyPosX, enemyPosY, ENEMY, projectileWidth = BOMB_SIZE, projectileHeight = BOMB_SIZE)
+            enemyPosX, enemyPosY = enemy.GetCurrentPosition()
+            bomb = Projectile(SCREEN_WIDTH, SCREEN_HEIGHT, enemyPosX, enemyPosY, ENEMY, BOMB, BOMB_SIZE, BOMB_SIZE, bombSpeed)
             projectile_group.add(bomb)
-            projectile_group.draw(SCREEN)
             isBomb = True
-        else:
-            projectile_group.draw(SCREEN)
+            lastBombTime = pygame.time.get_ticks()
+        elif isBomb == True and pygame.time.get_ticks() - lastBombTime >= enemy.GetEnemyFireRate():
+            isBomb = False
+        elif isBomb == True and bomb.GetCurrentPosition()[1] > SCREEN_HEIGHT + 100:
+            bomb.kill()
+            isBomb = False
+        elif pygame.sprite.spritecollide(bomb, starship_group, True):
+            bomb.kill()
+            isBomb = False
+
+        # Draw the projectile group on the screen
+        projectile_group.draw(SCREEN)
 
         # Draw spaceship groups
         enemy_group.draw(SCREEN)
