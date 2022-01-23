@@ -34,8 +34,9 @@ class Enemy(pygame.sprite.Sprite):
         
         # Create the graphics for the enemy spaceship; define the path, resize the image, assign the image to a rect
         # object of the same size, and finally set the position of the image on the screen.
-        self.image = pygame.image.load(os.path.join('assets\ships', 'moroder.png'))
+        self.image = pygame.image.load(os.path.join('assets\ships', 'moroder2.png')).convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.center = (self.currentPosX, self.currentPosY)
 
@@ -68,3 +69,6 @@ class Enemy(pygame.sprite.Sprite):
         # then reverse the direction of the spaceship to make it move to the left.
         elif self.moveDirection == self.RIGHT and (self.currentPosX + (self.image.get_width() / 2)) >= self.screenWidth - 10:
             self.moveDirection = self.LEFT
+
+    def GetEnemyPosition(self):
+        return self.currentPosX, self.startPosY
