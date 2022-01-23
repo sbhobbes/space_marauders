@@ -32,7 +32,7 @@ class Starship(pygame.sprite.Sprite):
 
         # Create the graphics for the player starship; define the path, resize the image, assign the image to a rect
         # object of the same size, and finally set the position of the image on the screen.
-        self.image = pygame.image.load(os.path.join('assets\ships', 'skyBlanc.png'))
+        self.image = pygame.image.load(os.path.join('assets\ships', 'skyBlanc2.png')).convert_alpha()
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
         self.rect.center = (self.currentPosX, self.startPosY)
