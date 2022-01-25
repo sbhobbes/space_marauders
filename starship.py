@@ -57,5 +57,6 @@ class Starship(pygame.sprite.Sprite):
             self.currentPosX += 5
             self.rect.center = (self.currentPosX, self.startPosY)
 
+    # Method to return the current x and y coordinates of the player starship
     def GetCurrentPosition(self):
         return self.currentPosX, self.startPosY

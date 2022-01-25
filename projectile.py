@@ -46,7 +46,7 @@ class Projectile(pygame.sprite.Sprite):
             self.rect.center = (self.positionX, self.positionY)
         elif self.type == self.BOMB:
             # Create graphics for the bomb projectile
-            self.image = pygame.image.load(os.path.join('assets\Projectiles', 'MachineGun01.png')).convert_alpha()
+            self.image = pygame.image.load(os.path.join('assets\Projectiles', 'MachineGun03.png')).convert_alpha()
             self.image = pygame.transform.scale(self.image, (self.width, self.height))
             self.rect = self.image.get_rect()
             self.rect.center = (self.positionX, self.positionY)
