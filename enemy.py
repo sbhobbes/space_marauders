@@ -41,34 +41,46 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.center = (self.currentPosX, self.currentPosY)
 
     # Override the sprit.update method to automate the movement of the enemy spaceship
-    def update(self):
+    def update(self, direction):
         """This method automates the left-to-right movement of the enemy spaceship
         In some version it will also be used to drop the spaceship down a level so
         with each back and forth motion the spaceship moves a little closer to the player"""
+        
+        # Assign parameter variables
+        self.moveDirection = direction
 
-        # If the spaceship is currently moving left, then check to make sure it's not too far to the left on the screen.
-        # If it's not too far left, then update the current position of the spaceship to move a little further to the
-        # left.
-        if self.moveDirection == self.LEFT and (self.currentPosX - (self.image.get_width() / 2)) > 10:
+        # if the direction argument is left, then update the position to the left; or if the direction
+        # argument is right, then update the position to the right
+        if self.moveDirection == self.LEFT:
             self.currentPosX -= self.moveRate
             self.rect.center = (self.currentPosX, self.currentPosY)
-        
-        # If the spaceship is currently moving left, but the position is too far to the left on the screen,
-        # then reverse the direction of the spaceship to make it move to the right.
-        elif self.moveDirection == self.LEFT and (self.currentPosX - (self.image.get_width() / 2)) <= 10:
-            self.moveDirection = self.RIGHT
-
-        # If the spaceship is currently moving right, then check to make sure it's not too far to the right on the screen.
-        # If it's not too far right, then update the current position of the spaceship to move a little further to the
-        # right.
-        elif self.moveDirection == self.RIGHT and (self.currentPosX + (self.image.get_width() / 2)) < self.screenWidth - 10:
+        elif self.moveDirection == self.RIGHT:
             self.currentPosX += self.moveRate
             self.rect.center = (self.currentPosX, self.currentPosY)
 
-        # If the spaceship is currently moving right, but the position is too far to the right on the screen,
-        # then reverse the direction of the spaceship to make it move to the left.
-        elif self.moveDirection == self.RIGHT and (self.currentPosX + (self.image.get_width() / 2)) >= self.screenWidth - 10:
-            self.moveDirection = self.LEFT
+        # # If the spaceship is currently moving left, then check to make sure it's not too far to the left on the screen.
+        # # If it's not too far left, then update the current position of the spaceship to move a little further to the
+        # # left.
+        # if self.moveDirection == self.LEFT and (self.currentPosX - (self.image.get_width() / 2)) > 10:
+        #     self.currentPosX -= self.moveRate
+        #     self.rect.center = (self.currentPosX, self.currentPosY)
+        
+        # # If the spaceship is currently moving left, but the position is too far to the left on the screen,
+        # # then reverse the direction of the spaceship to make it move to the right.
+        # elif self.moveDirection == self.LEFT and (self.currentPosX - (self.image.get_width() / 2)) <= 10:
+        #     self.moveDirection = self.RIGHT
+
+        # # If the spaceship is currently moving right, then check to make sure it's not too far to the right on the screen.
+        # # If it's not too far right, then update the current position of the spaceship to move a little further to the
+        # # right.
+        # elif self.moveDirection == self.RIGHT and (self.currentPosX + (self.image.get_width() / 2)) < self.screenWidth - 10:
+        #     self.currentPosX += self.moveRate
+        #     self.rect.center = (self.currentPosX, self.currentPosY)
+
+        # # If the spaceship is currently moving right, but the position is too far to the right on the screen,
+        # # then reverse the direction of the spaceship to make it move to the left.
+        # elif self.moveDirection == self.RIGHT and (self.currentPosX + (self.image.get_width() / 2)) >= self.screenWidth - 10:
+        #     self.moveDirection = self.LEFT
 
     # method to get the current x and y position of the enemy object
     def GetCurrentPosition(self):
@@ -77,3 +89,7 @@ class Enemy(pygame.sprite.Sprite):
     # method to get the fire rate of the enemy object
     def GetEnemyFireRate(self):
         return self.fireRate
+
+    # Method to get the width of the enemy object
+    def GetEnemyWidth(self):
+        return self.image.get_width()
