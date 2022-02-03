@@ -6,6 +6,7 @@
 
 import pygame
 import os
+from pygame.locals import *
 
 # Player starship class, inherits pygame.sprite.Sprite
 class Starship(pygame.sprite.Sprite):
@@ -37,25 +38,20 @@ class Starship(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (self.currentPosX, self.startPosY)
 
+    def Input(self):
+        keys = pygame.key.get_pressed()
+        if keys[K_LEFT] or keys[K_a]:
+            if (self.currentPosX - (self.image.get_width() / 2)) > 10:
+                self.currentPosX -= 5
+                self.rect.center = (self.currentPosX, self.startPosY)
+        if keys[K_RIGHT] or keys[K_d]:
+            if (self.currentPosX + (self.image.get_width() / 2)) < pygame.display.get_window_size()[0]:
+                self.currentPosX += 5
+                self.rect.center = (self.currentPosX, self.startPosY)
+
     # Override the sprit.update method to allow the player to control the position of the starship
-    def update(self, direction):
-        """This method takes direction as an argument and updates the x coordinate
-        position of the player starship based on that input.  It also checks to ensure
-        that the spaceship isn't too far to the left or the right on the screen."""
-
-        # If the parameter direction is to the left and not out of bounds,
-        # then update the position of the player starship to be a little
-        # further to the left.
-        if direction == self.LEFT and (self.currentPosX - (self.image.get_width() / 2)) > 10:
-            self.currentPosX -= 5
-            self.rect.center = (self.currentPosX, self.startPosY)
-
-        # If the parameter direction is to the right and not out of bounds,
-        # then update the position of the player starship to be a little
-        # further to the right.
-        elif direction == self.RIGHT and (self.currentPosX + (self.image.get_width() / 2)) < self.screenWidth - 10:
-            self.currentPosX += 5
-            self.rect.center = (self.currentPosX, self.startPosY)
+    def update(self):
+        self.Input()
 
     # Method to return the current x and y coordinates of the player starship
     def GetCurrentPosition(self):

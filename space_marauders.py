@@ -40,6 +40,8 @@ def main():
     RED = (255, 0, 0)
     GREEN = (0, 255, 0)
     ORANGE = (255, 165, 0)
+    WHITE = (255, 255, 255)
+    BLACK = (0, 0, 0)
 
     # Declare variables
     enemySpeed = 1                      # enemy ship starting speed, impacted by multipliers
@@ -57,7 +59,10 @@ def main():
     enemiesHit = 0                      # the number of enemies hit by the player
     playerAccuracy = 0                  # the accuracy percentage of lasers fired over enemies hit
     moveDirection = LEFT                # holds the direction that all enemy objects should move along the x axis
-    gameActive = False                  # flag for the game state
+    gameActive = False                  # flag for the active game state
+    gameOver = False                    # flag for end of game state
+    gameOverTime = 0                    # the time that the game ended; used to hold the score screen for a preset amount of time
+    calculateScore = False
     
     # Create the game display area, assign it to the SCREEN constant, and apply the background image
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -66,19 +71,18 @@ def main():
     BG_IMAGE = pygame.transform.scale(BG_IMAGE, (SCREEN_WIDTH, SCREEN_HEIGHT))
     BUTTON_FONT = pygame.font.Font('freesansbold.ttf', 50)
     TITLE_FONT = pygame.font.Font('freesansbold.ttf', 100)
-
-    # Create enemies
-    enemyGroup = CreateEnemies(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, enemyFireRate, enemySpeed, 10)
-
-    # create player starship object
-    starshipGroup = CreateStarship(SCREEN_WIDTH, SCREEN_HEIGHT, STARSHIP_SIZE, STARSHIP_SIZE, starshipFireRate)
+    SCORE_FONT = pygame.font.Font('freesansbold.ttf', 20)
 
     # Create groups to hold projectile objects
+    starshipGroup = pygame.sprite.Group()
+    enemyGroup = pygame.sprite.Group()
     laserGroup = pygame.sprite.Group()
     bombGroup = pygame.sprite.Group()
 
     # Game loop
     while True:
+
+        dropOneRow = False
 
         # Set maximum framerate
         FPSCLOCK.tick(FPS)
@@ -92,22 +96,28 @@ def main():
                 if isLaser == False and starshipGroup:
                     laserGroup = CreateProjectile(SCREEN_WIDTH, SCREEN_HEIGHT, starshipGroup, PLAYER, LASER, LASER_WIDTH, LASER_HEIGHT, laserSpeed)
                     lasersFired += 1
-                    print('lasers fired: ' + str(lasersFired))
                     isLaser = True
+            elif event.type == KEYUP and event.key == K_SPACE:
+                pass
             elif event.type == MOUSEBUTTONDOWN and newGameButton.collidepoint(pygame.mouse.get_pos()):
                 gameActive = True
+            elif event.type == MOUSEBUTTONDOWN and not newGameButton.collidepoint(pygame.mouse.get_pos()):
+                pass
             else:
                 pygame.event.post(event)
         
         # check game state for active game and update display accordingly
         if gameActive:
 
-            # Check user input for starship movement
-            keys = pygame.key.get_pressed()
-            if keys[K_LEFT] or keys[K_a]:
-                starshipGroup.update(LEFT)
-            if keys[K_RIGHT] or keys[K_d]:
-                starshipGroup.update(RIGHT)
+            if len(enemyGroup) == 0:
+                # Create enemies
+                enemyGroup = CreateEnemies(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, enemyFireRate, enemySpeed, 10)
+
+            if len(starshipGroup) == 0:
+                # create player starship object
+                starshipGroup = CreateStarship(SCREEN_WIDTH, SCREEN_HEIGHT, STARSHIP_SIZE, STARSHIP_SIZE, starshipFireRate)
+            
+            starshipGroup.update()
 
             # Check for laser existence and collision
             if isLaser == True:
@@ -117,6 +127,14 @@ def main():
                     elif pygame.sprite.groupcollide(laserGroup, enemyGroup, True, True):
                         isLaser = False
                         enemiesHit += 1
+                        levelScore += 25
+                        if len(enemyGroup) == 0:
+                            # gameActive = False
+                            gameOverTime = pygame.time.get_ticks()
+                            calculateScore = True
+                            gameOver = True
+                            ClearAllGroups((bombGroup, laserGroup, starshipGroup, enemyGroup))
+                            levelScore += 1000
 
             # Check to see if new enemy should be created; will later be replaced by levels, scoring, and resets
             if enemyGroup and isEnemy == False:
@@ -127,33 +145,27 @@ def main():
 
             # Check if enough time has passed to drop a bomb, if so, drop bomb
             if isBomb == False:
-                for enemy in enemyGroup:
-                    bombGroup = CreateProjectile(SCREEN_WIDTH, SCREEN_HEIGHT, enemyGroup, ENEMY, BOMB, BOMB_SIZE, BOMB_SIZE, bombSpeed)
-                    isBomb = True
-                    lastBombTime = pygame.time.get_ticks()
+                newBombs = CreateProjectile(SCREEN_WIDTH, SCREEN_HEIGHT, enemyGroup, ENEMY, BOMB, BOMB_SIZE, BOMB_SIZE, bombSpeed)
+                bombGroup.add(newBombs)
+                lastBombTime = pygame.time.get_ticks()
+                isBomb = True
             elif isBomb == True and pygame.time.get_ticks() - lastBombTime >= enemy.GetEnemyFireRate():
                 isBomb = False
             else:
                 for bomb in bombGroup:
                     if isBomb == True and bomb.GetCurrentPosition()[1] > SCREEN_HEIGHT + 100:
                         bomb.kill()
-                        isBomb = False
                     elif pygame.sprite.groupcollide(starshipGroup, bombGroup, True, True):
-                        isBomb = False
-                        gameActive = False
-
-            # calculate accuracy, score, etc.
-            accuracyChanged = False
-            if enemiesHit > 0:
-                tempPlayerAccuracy = playerAccuracy
-                playerAccuracy = round((enemiesHit / lasersFired * 100))
-                if playerAccuracy != tempPlayerAccuracy:
-                    accuracyChanged = True
-            
-            if accuracyChanged:
-                print(f'enemies hit: {enemiesHit}')
-                print(f'laser count: {lasersFired}')
-                print(f'accuracy: {playerAccuracy}')
+                        # gameActive = False
+                        gameOverTime = pygame.time.get_ticks()
+                        calculateScore = True
+                        gameOver = True
+                        ClearAllGroups((bombGroup, laserGroup, starshipGroup, enemyGroup))
+                    elif pygame.sprite.groupcollide(bombGroup, laserGroup, True, True):
+                        isLaser = False
+                        levelScore += 5
+                if len(bombGroup) == 0:
+                    isBomb = False
 
             # If any enemy is nearing the edge of the screen, update the moveDirection variable;
             # this variable is then passed into the enemy group update method to move all of the
@@ -163,9 +175,11 @@ def main():
                 width = enemy.GetEnemyWidth()
                 if xPosition - (width / 2) < 10:
                     moveDirection = RIGHT
+                    dropOneRow = True
                     break
                 elif xPosition + (width / 2) > SCREEN_WIDTH - 10:
                     moveDirection = LEFT
+                    dropOneRow = True
                     break
 
             # Draw group objects to the screen in order from lowest z-score to highest z-score;
@@ -180,12 +194,40 @@ def main():
             laserGroup.update()                 # update the y coordinate of the laser; x coordinate is static
             bombGroup.update()                  # update the y coordinate of the bombs; x coordinate is static        
             if moveDirection == LEFT:           
-                enemyGroup.update(LEFT)         # update the x and y coordinates of the enemies
+                enemyGroup.update(LEFT, dropOneRow)         # update the x and y coordinates of the enemies
             elif moveDirection == RIGHT:
-                enemyGroup.update(RIGHT)        # update the x and y coordinates of the enemies
+                enemyGroup.update(RIGHT, dropOneRow)        # update the x and y coordinates of the enemies
+
+            # Display the current score
+            scoreSurf = SCORE_FONT.render(f'Score: {levelScore}', True, WHITE)
+            scoreRect = scoreSurf.get_rect(topleft = (SCREEN_WIDTH / 10, 8))
+            SCREEN.blit(scoreSurf, scoreRect)
+            if enemiesHit > 0:
+                playerAccuracy = int((enemiesHit / lasersFired) * 100)
+            accuracySurf = SCORE_FONT.render(f'Accuracy: {playerAccuracy} %', True, WHITE)
+            accuracyRect = accuracySurf.get_rect(topright = (SCREEN_WIDTH / 8 * 7, 8))
+            SCREEN.blit(accuracySurf, accuracyRect)
 
         else:
             newGameButton = MainMenu(SCREEN, SCREEN_WIDTH, SCREEN_HEIGHT, BG_IMAGE, TITLE_FONT, ORANGE, BUTTON_FONT, RED, GREEN)
+
+        if gameOver and calculateScore:
+            totalScore = int(totalScore + levelScore + (10000 * (playerAccuracy / 100)))
+            calculateScore = False
+
+        if gameOver and gameOverTime + 5000 > pygame.time.get_ticks():
+            finalScoreSurf = SCORE_FONT.render(f'Final Score: {totalScore}', True, WHITE)
+            finalScoreRect = finalScoreSurf.get_rect(center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
+            SCREEN.fill(BLACK)
+            SCREEN.blit(finalScoreSurf, finalScoreRect)
+        elif gameOver and gameOverTime + 5000 < pygame.time.get_ticks():
+            gameActive = False
+            gameOver = False
+            lasersFired = 0
+            enemiesHit = 0
+            playerAccuracy = 0
+            levelScore = 0
+            totalScore = 0
             
         # apply all of the updates to the display surface
         pygame.display.update()
@@ -217,23 +259,30 @@ def Terminate():
     pygame.quit()
     exit()
 
+def CreateTextBox(screen, screenWidth, screenHeight, font, text, fontColor, rectCenter, background = False, backgroundColor = None, backgroundPadding = 0):
+    surf = font.render(text, True, fontColor)
+    rect = surf.get_rect(center = rectCenter)
+
+    if background:
+        bgSurf = pygame.Surface((surf.get_width() + backgroundPadding, surf.get_height() + backgroundPadding))
+        bgRect = surf.get_rect(center = ((screenWidth / 2), (screenHeight / 2)))
+        bgSurf.fill(backgroundColor)
+        screen.blit(bgSurf, bgRect)
+        screen.blit(surf, rect)
+        return bgSurf, bgRect
+    else:
+        screen.blit(surf, rect)
+        return surf, rect
+
 # Function for the main menu screen, which should be displayed when the user first starts
 # or when the escape key is pressed; however, the escape key would pull up the main menu
 # in a pause game state.
 def MainMenu(screen, screenWidth, screenHeight, background, titleFont, titleColor, buttonFont, buttonFontColor, buttonColor):
-    newGameSurf = buttonFont.render('New Game', True, buttonFontColor)
-    newGameSurf2 = buttonFont.render('New Game', True, buttonFontColor)
-    newGameRect = newGameSurf.get_rect(center = (screenWidth / 2, screenHeight / 2))
-    newGameRect2 = newGameSurf.get_rect(center = (screenWidth / 2, screenHeight / 2))
-    newGameSurf2.fill(buttonColor)
-    titleSurf = titleFont.render('Space Marauders', True, titleColor)
-    titleRect = titleSurf.get_rect(center = (screenWidth / 2, screenHeight / 6))
     screen.blit(background, (0, 0))
-    screen.blit(newGameSurf2, newGameRect2)
-    screen.blit(newGameSurf, newGameRect)
-    screen.blit(titleSurf, titleRect)
-
-    return newGameRect2
+    _, newGameRect = CreateTextBox(screen, screenWidth, screenHeight, buttonFont, 'New Game', buttonFontColor, (screenWidth / 2, screenHeight / 2), True, buttonColor)
+    CreateTextBox(screen, screenWidth, screenHeight, titleFont, 'Space Marauders', titleColor, (screenWidth / 2, screenHeight / 6))
+    
+    return newGameRect
 
 # Level start animation
 def GameStartAnimation():
@@ -284,6 +333,13 @@ def CreateProjectile(screenWidth, screenHeight, shipGroup, originType, projectil
 
     # Return the group of projectile objects to the calling function
     return group
+
+def DisplayScore():
+    pass
+
+def ClearAllGroups(groupList):
+    for group in groupList:
+        group.empty()
 
 # Call main function
 if __name__ == '__main__':
