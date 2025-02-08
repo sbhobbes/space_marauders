@@ -6,6 +6,8 @@
 
 import pygame
 import os
+import space_marauders
+
 
 # Enemy spaceship class, inherits pygame.sprite.Sprite
 class Enemy(pygame.sprite.Sprite):
@@ -34,7 +36,8 @@ class Enemy(pygame.sprite.Sprite):
         
         # Create the graphics for the enemy spaceship; define the path, resize the image, assign the image to a rect
         # object of the same size, and finally set the position of the image on the screen.
-        self.image = pygame.image.load(os.path.join('assets\ships', 'moroder2.png')).convert_alpha()
+        # self.image = pygame.image.load(os.path.join('assets/ships', 'moroder2.png')).convert_alpha()
+        self.image = space_marauders.utils.helpers.load_asset('moroder2.png', base_path='ships')
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
@@ -63,13 +66,13 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.center = (self.currentPosX, self.currentPosY)
 
     # method to get the current x and y position of the enemy object
-    def GetCurrentPosition(self):
+    def get_current_position(self):
         return self.currentPosX, self.currentPosY
 
     # method to get the fire rate of the enemy object
-    def GetEnemyFireRate(self):
+    def get_enemy_fire_rate(self):
         return self.fireRate
 
     # Method to get the width of the enemy object
-    def GetEnemyWidth(self):
+    def get_enemy_width(self):
         return self.image.get_width()

@@ -6,6 +6,8 @@
 
 import pygame
 import os
+import space_marauders
+
 
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, screenWidth, screenHeight, originPosX, originPosY, projectileOrigin, projectileType, projectileWidth, projectileHeight, projectileSpeed):
@@ -40,13 +42,15 @@ class Projectile(pygame.sprite.Sprite):
         # to the x and y coordinates passed into the __init__ function.
         if self.type == self.LASER:
             # Create graphics for the starship laser projectile
-            self.image = pygame.image.load(os.path.join('assets\Projectiles', 'Laser03.png')).convert_alpha()
+            # self.image = pygame.image.load(os.path.join('assets/Projectiles', 'Laser03.png')).convert_alpha()
+            self.image = space_marauders.utils.helpers.load_asset('Laser03.png', base_path='Projectiles')
             self.image = pygame.transform.scale(self.image, (self.width, self.height))
             self.rect = self.image.get_rect()
             self.rect.center = (self.positionX, self.positionY)
         elif self.type == self.BOMB:
             # Create graphics for the bomb projectile
-            self.image = pygame.image.load(os.path.join('assets\Projectiles', 'MachineGun03.png')).convert_alpha()
+            # self.image = pygame.image.load(os.path.join('assets/Projectiles', 'MachineGun03.png')).convert_alpha()
+            self.image = space_marauders.utils.helpers.load_asset('MachineGun03.png', base_path='Projectiles')
             self.image = pygame.transform.scale(self.image, (self.width, self.height))
             self.rect = self.image.get_rect()
             self.rect.center = (self.positionX, self.positionY)
@@ -63,5 +67,5 @@ class Projectile(pygame.sprite.Sprite):
             self.rect.center = (self.positionX, self.positionY)
 
     # Method to return current x and y position of the object
-    def GetCurrentPosition(self):
+    def get_current_position(self):
         return self.positionX, self.positionY

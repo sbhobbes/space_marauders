@@ -7,6 +7,8 @@
 import pygame
 import os
 from pygame.locals import *
+import space_marauders
+
 
 # Player starship class, inherits pygame.sprite.Sprite
 class Starship(pygame.sprite.Sprite):
@@ -33,7 +35,8 @@ class Starship(pygame.sprite.Sprite):
 
         # Create the graphics for the player starship; define the path, resize the image, assign the image to a rect
         # object of the same size, and finally set the position of the image on the screen.
-        self.image = pygame.image.load(os.path.join('assets\ships', 'skyBlanc2.png')).convert_alpha()
+        # self.image = pygame.image.load(os.path.join('assets/ships', 'skyBlanc2.png')).convert_alpha()
+        self.image = space_marauders.utils.helpers.load_asset('skyBlanc2.png', base_path='ships')
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
         self.rect.center = (self.currentPosX, self.startPosY)
@@ -54,5 +57,5 @@ class Starship(pygame.sprite.Sprite):
         self.Input()
 
     # Method to return the current x and y coordinates of the player starship
-    def GetCurrentPosition(self):
+    def get_current_position(self):
         return self.currentPosX, self.startPosY
