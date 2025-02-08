@@ -5,33 +5,47 @@
 # Image assets credit to: https://github.com/exewin https://exewin.github.io/
 
 import pygame
-import os
 import space_marauders
 
 
 # Enemy spaceship class, inherits pygame.sprite.Sprite
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, screenWidth, screenHeight, width, height, startingHealth, currentHealth, fireRate, weaponType, shipType, startPosX, 
-    startPosY, moveRate, baseDamage = 1, lastAttackTime = None):
+    def __init__(
+        self,
+        screen_width,
+        screen_height,
+        width,
+        height,
+        starting_health,
+        current_health,
+        fire_rate,
+        weapon_type,
+        ship_type,
+        starting_x_position,
+        starting_y_position,
+        move_rate,
+        base_damage=1,
+        last_attack_time=None
+    ):
         super().__init__()
         self.LEFT = 'left'                              # constant to check the direction the enemy ship is moving
         self.RIGHT = 'right'                            # constant to check the direction the enemy ship is moving
-        self.screenWidth = screenWidth                  # width of the game screen
-        self.screenHeight = screenHeight                # height of the game screen
+        self.screen_width = screen_width                  # width of the game screen
+        self.screen_height = screen_height                # height of the game screen
         self.width = width                              # the width of the enemy spaceship 
         self.height = height                            # the height of the enemy spaceship
-        self.startingHealth = startingHealth            # starting health value of the enemy spaceship
-        self.currentHealth = currentHealth              # current health value of the enemy spaceship
-        self.fireRate = fireRate                        # the rate at which the enemy ship can attack
-        self.weaponType = weaponType                    # the type of weapon equipped by enemy spaceship
-        self.shipType = shipType                        # the type of spaceship
-        self.startPosX = startPosX                      # starting x coordinate of the enemy spaceship
-        self.startPosY = startPosY                      # starting y coordinate of the enemy spaceship
-        self.currentPosX = self.startPosX               # current x coordinate of the enemy spaceship
-        self.currentPosY = self.startPosY               # current y coordinate  of the enemy spaceship
-        self.moveRate = moveRate                        # the speed at which the enemy spaceship moves along the x axis
-        self.baseDamage = baseDamage                    # the base damage of the enemy spaceship; impacted by damage multipliers
-        self.lastAttackTime = lastAttackTime            # the time of the last attack, used to see if another attack can be made
+        self.starting_health = starting_health            # starting health value of the enemy spaceship
+        self.current_health = current_health              # current health value of the enemy spaceship
+        self.fire_rate = fire_rate                        # the rate at which the enemy ship can attack
+        self.weapon_type = weapon_type                    # the type of weapon equipped by enemy spaceship
+        self.ship_type = ship_type                        # the type of spaceship
+        self.starting_x_position = starting_x_position                      # starting x coordinate of the enemy spaceship
+        self.starting_y_position = starting_y_position                      # starting y coordinate of the enemy spaceship
+        self.currentPosX = self.starting_x_position               # current x coordinate of the enemy spaceship
+        self.currentPosY = self.starting_y_position               # current y coordinate  of the enemy spaceship
+        self.move_rate = move_rate                        # the speed at which the enemy spaceship moves along the x axis
+        self.base_damage = base_damage                    # the base damage of the enemy spaceship; impacted by damage multipliers
+        self.last_attack_time = last_attack_time            # the time of the last attack, used to see if another attack can be made
         self.moveDirection = self.LEFT                  # indicates the direction the enemy spaceship is moving, left or right
         
         # Create the graphics for the enemy spaceship; define the path, resize the image, assign the image to a rect
@@ -55,10 +69,10 @@ class Enemy(pygame.sprite.Sprite):
         # if the direction argument is left, then update the position to the left; or if the direction
         # argument is right, then update the position to the right
         if self.moveDirection == self.LEFT:
-            self.currentPosX -= self.moveRate
+            self.currentPosX -= self.move_rate
             self.rect.center = (self.currentPosX, self.currentPosY)
         elif self.moveDirection == self.RIGHT:
-            self.currentPosX += self.moveRate
+            self.currentPosX += self.move_rate
             self.rect.center = (self.currentPosX, self.currentPosY)
 
         if drop:
@@ -71,7 +85,7 @@ class Enemy(pygame.sprite.Sprite):
 
     # method to get the fire rate of the enemy object
     def get_enemy_fire_rate(self):
-        return self.fireRate
+        return self.fire_rate
 
     # Method to get the width of the enemy object
     def get_enemy_width(self):

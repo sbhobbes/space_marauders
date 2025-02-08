@@ -10,29 +10,40 @@ import space_marauders
 
 
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, screenWidth, screenHeight, originPosX, originPosY, projectileOrigin, projectileType, projectileWidth, projectileHeight, projectileSpeed):
+    def __init__(
+        self,
+        screen_width,
+        screen_height,
+        original_x_position,
+        original_y_position,
+        projectile_origin,
+        projectile_type,
+        projectile_width,
+        projectile_height,
+        projectile_speed
+    ):
         super().__init__()
-        self.screenWidth = screenWidth              # the width of the display screen
-        self.screenHeight = screenHeight            # the height of the display screen
-        self.positionX = originPosX                 # the x coordinate of the projectile
-        self.positionY = originPosY                 # the y coordinate of the projectile
-        self.width = projectileWidth                # the width of the projectile
-        self.height = projectileHeight              # the height of the projectile
-        self.type = projectileType                  # the type of projectile to create; this controls the image file
+        self.screen_width = screen_width              # the width of the display screen
+        self.screen_height = screen_height            # the height of the display screen
+        self.positionX = original_x_position                 # the x coordinate of the projectile
+        self.positionY = original_y_position                 # the y coordinate of the projectile
+        self.width = projectile_width                # the width of the projectile
+        self.height = projectile_height              # the height of the projectile
+        self.type = projectile_type                  # the type of projectile to create; this controls the image file
         self.LASER = 'laser'                        # one of the types of projectiles that could be referenced
         self.BOMB = 'bomb'                          # one of the types of projectiles that could be references
         self.ENEMY = 'enemy'                        # indicates if the projectile was launched by an enemy
         self.PLAYER = 'player'                      # indicates if the projectile was launched by the player
         self.UP = 'up'                              # indicates if the projectile travel direction should be up
         self.DOWN = 'down'                          # indicates if the projectile travel direction should be down
-        self.speed = projectileSpeed
+        self.speed = projectile_speed
         
-        # check the projectileOrigin value to see if it was launched by an enemy or the player.
+        # check the projectile_origin value to see if it was launched by an enemy or the player.
         # if it was launched by an enemy then the travel direction should be down;
         # if it was launched by the player then the travel direction should be up.
-        if projectileOrigin == self.ENEMY:
+        if projectile_origin == self.ENEMY:
             self.direction = self.DOWN
-        elif projectileOrigin == self.PLAYER:
+        elif projectile_origin == self.PLAYER:
             self.direction = self.UP
 
         # check the projectile type to see which graphic object to create.
