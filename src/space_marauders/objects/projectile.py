@@ -1,3 +1,6 @@
+'''
+This module contains the classes for the alien and player projectiles.
+'''
 # Author: Seth Hobbes
 # Company: Springboro Technologies, LLC DBA Monarch Technologies
 # Date: 1/20/2022
@@ -5,30 +8,29 @@
 # Image assets credit to: https://github.com/exewin https://exewin.github.io/
 
 import pygame
-import os
 import space_marauders
 
 
 class Projectile(pygame.sprite.Sprite):
+    '''
+    This is the main projectile class.
+    '''
     def __init__(
         self,
-        screen_width,
-        screen_height,
-        original_x_position,
-        original_y_position,
-        projectile_origin,
-        projectile_type,
-        projectile_width,
-        projectile_height,
+        original_x_position: int,
+        original_y_position: int,
+        projectile_origin: int,
+        projectile_type: str,
+        projectile_width: int,
+        projectile_length: int,
         projectile_speed
     ):
         super().__init__()
-        self.screen_width = screen_width              # the width of the display screen
-        self.screen_height = screen_height            # the height of the display screen
-        self.positionX = original_x_position                 # the x coordinate of the projectile
-        self.positionY = original_y_position                 # the y coordinate of the projectile
+        self.position_x = original_x_position                 # the x coordinate of the projectile
+        self.position_y = original_y_position                 # the y coordinate of the projectile
         self.width = projectile_width                # the width of the projectile
-        self.height = projectile_height              # the height of the projectile
+        self.length = projectile_length             # the length of the projectile
+        self.speed = projectile_speed
         self.type = projectile_type                  # the type of projectile to create; this controls the image file
         self.LASER = 'laser'                        # one of the types of projectiles that could be referenced
         self.BOMB = 'bomb'                          # one of the types of projectiles that could be references
@@ -36,13 +38,13 @@ class Projectile(pygame.sprite.Sprite):
         self.PLAYER = 'player'                      # indicates if the projectile was launched by the player
         self.UP = 'up'                              # indicates if the projectile travel direction should be up
         self.DOWN = 'down'                          # indicates if the projectile travel direction should be down
-        self.speed = projectile_speed
         
         # check the projectile_origin value to see if it was launched by an enemy or the player.
         # if it was launched by an enemy then the travel direction should be down;
         # if it was launched by the player then the travel direction should be up.
         if projectile_origin == self.ENEMY:
             self.direction = self.DOWN
+
         elif projectile_origin == self.PLAYER:
             self.direction = self.UP
 
@@ -54,29 +56,38 @@ class Projectile(pygame.sprite.Sprite):
         if self.type == self.LASER:
             # Create graphics for the starship laser projectile
             # self.image = pygame.image.load(os.path.join('assets/Projectiles', 'Laser03.png')).convert_alpha()
-            self.image = space_marauders.utils.helpers.load_asset('Laser03.png', base_path='Projectiles')
-            self.image = pygame.transform.scale(self.image, (self.width, self.height))
+            self.image = space_marauders.utils.helpers.load_asset('laser_03.png', base_path='projectiles')
+            self.image = pygame.transform.scale(self.image, (self.width, self.length))
             self.rect = self.image.get_rect()
-            self.rect.center = (self.positionX, self.positionY)
+            self.rect.center = (self.position_x, self.position_y)
+
         elif self.type == self.BOMB:
             # Create graphics for the bomb projectile
             # self.image = pygame.image.load(os.path.join('assets/Projectiles', 'MachineGun03.png')).convert_alpha()
-            self.image = space_marauders.utils.helpers.load_asset('MachineGun03.png', base_path='Projectiles')
-            self.image = pygame.transform.scale(self.image, (self.width, self.height))
+            self.image = space_marauders.utils.helpers.load_asset('machine_gun_03.png', base_path='projectiles')
+            self.image = pygame.transform.scale(self.image, (self.width, self.length))
             self.rect = self.image.get_rect()
-            self.rect.center = (self.positionX, self.positionY)
+            self.rect.center = (self.position_x, self.position_y)
 
-    # override the sprite.update method to control the movement of the projectile based
-    # on the travel direction, the origin point, and the speed value passed into the
-    # __init__ function.
+
     def update(self):
+        '''
+        This method overrides the sprite.update parent object method to control the movement
+        of the projectile based on the travel direction, the origin point, and the speed
+        value.
+        '''
         if self.direction == self.UP:
-            self.positionY -= self.speed
-            self.rect.center = (self.positionX, self.positionY)
+            self.position_y -= self.speed
+            self.rect.center = (self.position_x, self.position_y)
+
         elif self.direction == self.DOWN:
-            self.positionY += self.speed
-            self.rect.center = (self.positionX, self.positionY)
+            self.position_y += self.speed
+            self.rect.center = (self.position_x, self.position_y)
+
 
     # Method to return current x and y position of the object
     def get_current_position(self):
-        return self.positionX, self.positionY
+        '''
+        Get the current x and y coordinates of the projectile.
+        '''
+        return self.position_x, self.position_y

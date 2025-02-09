@@ -1,0 +1,10 @@
+screen_width: 1200
+screen_height: 900
+fps: 60
+player_ship_size: 50
+alien_ship_size: 50
+laser_width: 5
+laser_length: 25
+bomb_size: 15
+font_name: 'freesansbold.ttf'
+background_image: 'background_space.png'

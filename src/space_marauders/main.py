@@ -18,27 +18,24 @@ def main():
     pygame.init()
     pygame.font.init()
 
+    # Get metadata
+    setup = space_marauders.utils.helpers.get_metadata('setup.yaml')
+
     # Declare constants
-    SCREEN_WIDTH = 1200                 # width of the screen area
-    SCREEN_HEIGHT = 900                 # height of the screen area
-    FPS = 60                            # maximum frames per second (FPS)
+    SCREEN_WIDTH = setup['screen_width']
+    SCREEN_HEIGHT = setup['screen_height']
     FPSCLOCK = pygame.time.Clock()      # clock object to control the maximum FPS
     LEFT = 'left'                       # movement direction for player starship
     RIGHT = 'right'                     # movement direction for player starship
-    STARSHIP_SIZE = 50                  # player starship height and width
-    ENEMY_SIZE = 50                     # enemy spaceship height and width
-    LASER_WIDTH = 5                     # width of the player starship laser 
-    LASER_HEIGHT = 25                   # height of the player starship laser
-    BOMB_SIZE = 15                      # height and width of the enemy bomb image
     PLAYER = 'player'                   # value to pass to the projectile class call for origin point
     ENEMY = 'enemy'                     # value to pass to the projectile class call for origin point
     BOMB = 'bomb'                       # value to pass into the projectile class call for projectile type
     LASER = 'laser'                     # value to pass into the projectile class call for projectile type
 
     # Colors
-    RED = (255, 0, 0)
-    GREEN = (0, 255, 0)
-    ORANGE = (255, 165, 0)
+    # RED = (255, 0, 0)
+    # GREEN = (0, 255, 0)
+    # ORANGE = (255, 165, 0)
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
 
@@ -64,14 +61,16 @@ def main():
     calculate_score = False
     
     # Create the game display area, assign it to the SCREEN constant, and apply the background image
-    SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    # SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    game = space_marauders.game_management.layout.Screen()
+    SCREEN = game.get_screen()
     # BG_IMAGE = pygame.image.load(os.path.join('assets', 'backgroundSpace.png'))
-    BG_IMAGE = space_marauders.utils.helpers.load_asset('backgroundSpace.png')
-    BG_IMAGE.set_alpha(150)
-    BG_IMAGE = pygame.transform.scale(BG_IMAGE, (SCREEN_WIDTH, SCREEN_HEIGHT))
-    BUTTON_FONT = pygame.font.Font('freesansbold.ttf', 50)
-    TITLE_FONT = pygame.font.Font('freesansbold.ttf', 100)
-    SCORE_FONT = pygame.font.Font('freesansbold.ttf', 20)
+    # BG_IMAGE = space_marauders.utils.helpers.load_asset(setup['background_image'])
+    # BG_IMAGE.set_alpha(150)
+    # BG_IMAGE = pygame.transform.scale(BG_IMAGE, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    # BUTTON_FONT = pygame.font.Font(setup['font_name'], 50)
+    # TITLE_FONT = pygame.font.Font(setup['font_name'], 100)
+    SCORE_FONT = pygame.font.Font(setup['font_name'], 20)
 
     # Create groups to hold projectile objects
     starship_group = pygame.sprite.Group()
@@ -84,24 +83,35 @@ def main():
         drop_one_row = False
 
         # Set maximum framerate
-        FPSCLOCK.tick(FPS)
+        FPSCLOCK.tick(setup['fps'])
 
         # Check user input for quit events and escape key
-        check_for_quit()
+        space_marauders.game_management.runtime.check_for_quit()
 
         # Create laser object if spacebar is pressed
         for event in pygame.event.get():
             if event.type == pygame.KEYUP and event.key == pygame.K_SPACE and game_active:
                 if is_laser is False and starship_group:
-                    laser_group = create_projectile(SCREEN_WIDTH, SCREEN_HEIGHT, starship_group, PLAYER, LASER, LASER_WIDTH, LASER_HEIGHT, laser_speed)
+                    laser_group = space_marauders.game_management.fire.create_projectile(
+                        starship_group,
+                        PLAYER,
+                        LASER,
+                        setup['laser_width'],
+                        setup['laser_length'],
+                        laser_speed
+                    )
                     lasers_fired += 1
                     is_laser = True
+
             elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
                 pass
+
             elif event.type == pygame.MOUSEBUTTONDOWN and new_game_button.collidepoint(pygame.mouse.get_pos()):
                 game_active = True
+
             elif event.type == pygame.MOUSEBUTTONDOWN and not new_game_button.collidepoint(pygame.mouse.get_pos()):
                 pass
+
             else:
                 pygame.event.post(event)
 
@@ -109,11 +119,24 @@ def main():
         if game_active:
             if len(enemy_group) == 0:
                 # Create enemies
-                enemy_group = create_enemies(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, enemy_fire_rate, enemy_speed, 10)
+                enemy_group = space_marauders.game_management.deploy.create_enemies(
+                    SCREEN_WIDTH,
+                    SCREEN_HEIGHT,
+                    setup['alien_ship_size'],
+                    enemy_fire_rate,
+                    enemy_speed,
+                    10
+                )
 
             if len(starship_group) == 0:
                 # create player starship object
-                starship_group = create_starship(SCREEN_WIDTH, SCREEN_HEIGHT, STARSHIP_SIZE, STARSHIP_SIZE, starship_fire_rate)
+                starship_group = space_marauders.game_management.deploy.create_starship(
+                    SCREEN_WIDTH,
+                    SCREEN_HEIGHT,
+                    setup['player_ship_size'],
+                    setup['player_ship_size'],
+                    starship_fire_rate
+                )
 
             starship_group.update()
 
@@ -131,7 +154,12 @@ def main():
                             game_over_time = pygame.time.get_ticks()
                             calculate_score = True
                             game_over = True
-                            clear_all_groups((bomb_group, laser_group, starship_group, enemy_group))
+                            space_marauders.game_management.runtime.clear_all_groups([
+                                bomb_group,
+                                laser_group,
+                                starship_group,
+                                enemy_group
+                            ])
                             level_score += 1000
 
             # Check to see if new enemy should be created; will later be replaced by levels, scoring, and resets
@@ -139,11 +167,25 @@ def main():
                 is_enemy = True
             elif not enemy_group and is_enemy is True:
                 is_enemy = False
-                enemy_group = create_enemies(SCREEN_WIDTH, SCREEN_HEIGHT, ENEMY_SIZE, enemy_fire_rate, enemy_speed, 10)
+                enemy_group = space_marauders.game_management.deploy.create_enemies(
+                    SCREEN_WIDTH,
+                    SCREEN_HEIGHT,
+                    setup['alien_ship_size'],
+                    enemy_fire_rate,
+                    enemy_speed,
+                    10
+                )
 
             # Check if enough time has passed to drop a bomb, if so, drop bomb
             if is_bomb is False:
-                new_bombs = create_projectile(SCREEN_WIDTH, SCREEN_HEIGHT, enemy_group, ENEMY, BOMB, BOMB_SIZE, BOMB_SIZE, bomb_speed)
+                new_bombs = space_marauders.game_management.fire.create_projectile(
+                    enemy_group,
+                    ENEMY,
+                    BOMB,
+                    setup['bomb_size'],
+                    setup['bomb_size'],
+                    bomb_speed
+                )
                 bomb_group.add(new_bombs)
                 last_bomb_time = pygame.time.get_ticks()
                 is_bomb = True
@@ -158,7 +200,12 @@ def main():
                         game_over_time = pygame.time.get_ticks()
                         calculate_score = True
                         game_over = True
-                        clear_all_groups((bomb_group, laser_group, starship_group, enemy_group))
+                        space_marauders.game_management.runtime.clear_all_groups([
+                            bomb_group,
+                            laser_group,
+                            starship_group,
+                            enemy_group
+                        ])
                     elif pygame.sprite.groupcollide(bomb_group, laser_group, True, True):
                         is_laser = False
                         level_score += 5
@@ -175,6 +222,7 @@ def main():
                     move_direction = RIGHT
                     drop_one_row = True
                     break
+
                 if x_position + (width / 2) > SCREEN_WIDTH - 10:
                     move_direction = LEFT
                     drop_one_row = True
@@ -182,17 +230,18 @@ def main():
 
             # Draw group objects to the screen in order from lowest z-score to highest z-score;
             # if the display surface (SCREEN) has a z-score of 0, then:
-            SCREEN.blit(BG_IMAGE, (0, 0))       # background image; z-score = 1
-            laser_group.draw(SCREEN)             # draw lasers; z-score = 2
-            bomb_group.draw(SCREEN)              # draw bombs; z-score = 3
-            enemy_group.draw(SCREEN)             # draw enemies; z-score = 4
-            starship_group.draw(SCREEN)          # draw starship; z-score = 5
+            game.blit(game.background, (0, 0))       # background image; z-score = 1
+            laser_group.draw(game)             # draw lasers; z-score = 2
+            bomb_group.draw(game)              # draw bombs; z-score = 3
+            enemy_group.draw(game)             # draw enemies; z-score = 4
+            starship_group.draw(game)          # draw starship; z-score = 5
 
             # Update all object positions
             laser_group.update()                 # update the y coordinate of the laser; x coordinate is static
             bomb_group.update()                  # update the y coordinate of the bombs; x coordinate is static        
             if move_direction == LEFT:           
                 enemy_group.update(LEFT, drop_one_row)         # update the x and y coordinates of the enemies
+
             elif move_direction == RIGHT:
                 enemy_group.update(RIGHT, drop_one_row)        # update the x and y coordinates of the enemies
 
@@ -202,12 +251,13 @@ def main():
             SCREEN.blit(score_surface, score_rectangle)
             if enemies_hit > 0:
                 player_accuracy = int((enemies_hit / lasers_fired) * 100)
+
             accuracy_surface = SCORE_FONT.render(f'Accuracy: {player_accuracy} %', True, WHITE)
             accuracy_rectangle = accuracy_surface.get_rect(topright = (SCREEN_WIDTH / 8 * 7, 8))
             SCREEN.blit(accuracy_surface, accuracy_rectangle)
 
         else:
-            new_game_button = main_menu(SCREEN, SCREEN_WIDTH, SCREEN_HEIGHT, BG_IMAGE, TITLE_FONT, ORANGE, BUTTON_FONT, RED, GREEN)
+            new_game_button = game.main_menu()
 
         if game_over and calculate_score:
             total_score = int(total_score + level_score + (10000 * (player_accuracy / 100)))
@@ -230,241 +280,6 @@ def main():
 
         # apply all of the updates to the display surface
         pygame.display.update()
-
-
-# Check for quit event
-def check_for_quit():
-    """check user inputs to see if the game should continue or terminate"""
-
-    # Loop through all events of type QUIT
-    for event in pygame.event.get(pygame.QUIT):
-
-        # If QUIT event found, call terminate function
-        terminate()
-
-    # Loop through keyup events to check for Esc key input
-    for event in pygame.event.get(pygame.KEYUP):
-
-        # if key up is the Esc key then call terminate function to exit game
-        if event.key == pygame.K_ESCAPE:
-            terminate()
-
-        # if key up is not the Esc key then put it back into the event queue
-        else:
-            pygame.event.post(event)
-
-
-# Quit function
-def terminate():
-    """This function quits the game and terminates code execution"""
-    pygame.quit()
-    sys.exit()
-
-
-def create_text_box(
-    screen,
-    screen_width,
-    screen_height,
-    font,
-    text,
-    font_color,
-    rectangle_center,
-    background=False,
-    background_color=None,
-    background_padding=0
-):
-    surface = font.render(text, True, font_color)
-    rectangle = surface.get_rect(center = rectangle_center)
-
-    if background:
-        surface_width = surface.get_width()
-        surface_height = surface.get_height()
-        surface_dimensions = (surface_width + background_padding, surface_height + background_padding)
-        background_surface = pygame.Surface(surface_dimensions)
-        background_rectangle = surface.get_rect(center = ((screen_width / 2), (screen_height / 2)))
-        background_surface.fill(background_color)
-        screen.blit(background_surface, background_rectangle)
-        screen.blit(surface, rectangle)
-        return background_surface, background_rectangle
-    else:
-        screen.blit(surface, rectangle)
-        return surface, rectangle
-
-
-# Function for the main menu screen, which should be displayed when the user first starts
-# or when the escape key is pressed; however, the escape key would pull up the main menu
-# in a pause game state.
-def main_menu(
-    screen: pygame.display,
-    screen_width: int,
-    screen_height: int,
-    background: pygame.image,
-    title_font: pygame.font,
-    title_color: tuple[int, int, int],
-    button_font: pygame.font,
-    button_font_color: tuple[int, int, int],
-    button_color: tuple[int, int, int]
-) -> pygame.rect:
-    '''
-    Create the main menu
-    '''
-    screen.blit(background, (0, 0))
-    _, new_game_rectangle = create_text_box(
-        screen,
-        screen_width=screen_width,
-        screen_height=screen_height,
-        font=button_font,
-        text='New Game',
-        font_color=button_font_color,
-        rectangle_center=(screen_width / 2, screen_height / 2),
-        background=True,
-        background_color=button_color
-    )
-    create_text_box(
-        screen=screen,
-        screen_width=screen_width,
-        screen_height=screen_height,
-        font=title_font,
-        text='Space Marauders',
-        font_color=title_color,
-        rectangle_center=(screen_width / 2, screen_height / 6)
-    )
-
-    return new_game_rectangle
-
-
-# Level start animation
-def game_start_animation():
-    '''
-    Call the animation at the start of the game.
-    '''
-    pass
-
-
-# Display game over animation upon player death
-def game_over_animation():
-    '''
-    Call the game over animation.
-    '''
-    pass
-
-
-# Create player starship function
-def create_starship(screen_width, screen_height, starship_height, starship_width, starship_fire_rate):
-    '''
-    Create a player starship.
-    '''
-    # Create the starship group object
-    group = pygame.sprite.Group()
-
-    # Create the starship object
-    starship = space_marauders.starships.starship.Starship(
-        screen_width=screen_width,
-        screen_height=screen_height,
-        width=starship_width,
-        height=starship_height,
-        starting_health=100,
-        current_health=100,
-        fire_rate=starship_fire_rate,
-        weapon_type='phaser',
-        ship_type='alpha',
-        starting_x_position=(screen_width / 2),
-        starting_y_position=(screen_height / 8 * 7.5),
-        base_damage=10,
-        shield_type='ion'
-    )
-    group.add(starship)
-
-    # Return the starship group object to the calling function
-    return group
-
-
-# Create enemies function
-def create_enemies(
-    screen_width: int,
-    screen_height: int,
-    size: int,
-    fire_rate: int,
-    speed: int,
-    enemy_count: int
-):
-    '''
-    Create enemies on the screen.
-    '''
-    # Create the enemies group object
-    group = pygame.sprite.Group()
-
-    # create enemy spaceship objects and add to a group
-    for enemy in range(enemy_count):
-        new_enemy = space_marauders.aliens.starship.Enemy(
-            screen_width=screen_width,
-            screen_height=screen_height,
-            width=size,
-            height=size,
-            starting_health=10,
-            current_health=10,
-            fire_rate=fire_rate,
-            weapon_type='phaser',
-            ship_type='alpha',
-            starting_x_position=((screen_width / (enemy_count + 1)) * (enemy + 1)),
-            starting_y_position=(screen_height / 8 * 0.5),
-            move_rate=speed
-        )
-        group.add(new_enemy)
-
-    # Return the group of enemy objects to the calling function
-    return group
-
-# Create laser function
-def create_projectile(
-    screen_width: int,
-    screen_height: int,
-    ship_group: pygame.sprite.Group,
-    origin_type: str,
-    projectile_type: str,
-    projectile_width: int,
-    projectile_height: int,
-    projectile_speed: int
-):
-    '''
-    Create a projectile fired from the player starship.
-    '''
-    # Create the projectile group object
-    group = pygame.sprite.Group()
-
-    # Create the projectile objects and add to a group
-    for ship in ship_group:
-        ship_x_position, ship_y_position = ship.get_current_position()
-        projectile = space_marauders.objects.projectile.Projectile(
-            screen_width=screen_width,
-            screen_height=screen_height,
-            original_x_position=ship_x_position,
-            original_y_position=ship_y_position,
-            projectile_origin=origin_type,
-            projectile_type=projectile_type,
-            projectile_width=projectile_width,
-            projectile_height=projectile_height,
-            projectile_speed=projectile_speed
-        )
-        group.add(projectile)
-
-    # Return the group of projectile objects to the calling function
-    return group
-
-
-def display_score():
-    '''
-    Display the scoreboard.
-    '''
-    pass
-
-
-def clear_all_groups(group_list):
-    '''
-    Remove all groups from the screen.
-    '''
-    for group in group_list:
-        group.empty()
 
 
 # Call main function
