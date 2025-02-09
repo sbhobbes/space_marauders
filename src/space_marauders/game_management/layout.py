@@ -31,8 +31,6 @@ class Screen():
         '''
         self.screen.blit(self.background, (0, 0))
         _, new_game_rectangle = self.create_text_box(
-            screen_width=self.setup['screen_width'],
-            screen_height=self.setup['screen_height'],
             font=self.button_font,
             text='New Game',
             font_color=self.button_font_color,
@@ -41,8 +39,6 @@ class Screen():
             background_color=self.button_color
         )
         self.create_text_box(
-            screen_width=self.setup['screen_width'],
-            screen_height=self.setup['screen_height'],
             font=self.title_font,
             text='Space Marauders',
             font_color=self.title_color,
@@ -54,8 +50,6 @@ class Screen():
 
     def create_text_box(
         self,
-        screen_width,
-        screen_height,
         font,
         text,
         font_color,
@@ -75,7 +69,7 @@ class Screen():
             surface_height = surface.get_height()
             surface_dimensions = (surface_width + background_padding, surface_height + background_padding)
             background_surface = pygame.Surface(surface_dimensions)
-            background_rectangle = surface.get_rect(center = ((screen_width / 2), (screen_height / 2)))
+            background_rectangle = surface.get_rect(center = ((self.setup['screen_width'] / 2), (self.setup['screen_height'] / 2)))
             background_surface.fill(background_color)
             self.screen.blit(background_surface, background_rectangle)
             self.screen.blit(surface, rectangle)

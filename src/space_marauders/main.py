@@ -120,9 +120,6 @@ def main():
             if len(enemy_group) == 0:
                 # Create enemies
                 enemy_group = space_marauders.game_management.deploy.create_enemies(
-                    SCREEN_WIDTH,
-                    SCREEN_HEIGHT,
-                    setup['alien_ship_size'],
                     enemy_fire_rate,
                     enemy_speed,
                     10
@@ -130,13 +127,7 @@ def main():
 
             if len(starship_group) == 0:
                 # create player starship object
-                starship_group = space_marauders.game_management.deploy.create_starship(
-                    SCREEN_WIDTH,
-                    SCREEN_HEIGHT,
-                    setup['player_ship_size'],
-                    setup['player_ship_size'],
-                    starship_fire_rate
-                )
+                starship_group = space_marauders.game_management.deploy.create_starship(starship_fire_rate)
 
             starship_group.update()
 
