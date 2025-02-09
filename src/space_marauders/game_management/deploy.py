@@ -32,7 +32,7 @@ def create_enemies(
     # size: int,
     fire_rate: int,
     speed: int,
-    enemy_count: int
+    object_count: int
 ):
     '''
     Create enemies on the screen.
@@ -43,12 +43,12 @@ def create_enemies(
     group = pygame.sprite.Group()
 
     # create enemy spaceship objects and add to a group
-    for enemy in range(enemy_count):
+    for enemy in range(object_count):
         new_enemy = space_marauders.aliens.starship.Enemy(
             width=setup['alien_ship_size'],
             height=setup['alien_ship_size'],
             fire_rate=fire_rate,
-            starting_x_position=((setup['screen_width'] / (enemy_count + 1)) * (enemy + 1)),
+            starting_x_position=((setup['screen_width'] / (object_count + 1)) * (enemy + 1)),
             starting_y_position=(setup['screen_height'] / 8 * 0.5),
             move_rate=speed
         )

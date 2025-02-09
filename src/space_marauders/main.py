@@ -33,9 +33,6 @@ def main():
     LASER = 'laser'                     # value to pass into the projectile class call for projectile type
 
     # Colors
-    # RED = (255, 0, 0)
-    # GREEN = (0, 255, 0)
-    # ORANGE = (255, 165, 0)
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
 
@@ -61,22 +58,17 @@ def main():
     calculate_score = False
     
     # Create the game display area, assign it to the SCREEN constant, and apply the background image
-    # SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     game = space_marauders.game_management.layout.Screen()
     SCREEN = game.get_screen()
-    # BG_IMAGE = pygame.image.load(os.path.join('assets', 'backgroundSpace.png'))
-    # BG_IMAGE = space_marauders.utils.helpers.load_asset(setup['background_image'])
-    # BG_IMAGE.set_alpha(150)
-    # BG_IMAGE = pygame.transform.scale(BG_IMAGE, (SCREEN_WIDTH, SCREEN_HEIGHT))
-    # BUTTON_FONT = pygame.font.Font(setup['font_name'], 50)
-    # TITLE_FONT = pygame.font.Font(setup['font_name'], 100)
     SCORE_FONT = pygame.font.Font(setup['font_name'], 20)
 
     # Create groups to hold projectile objects
-    starship_group = pygame.sprite.Group()
-    enemy_group = pygame.sprite.Group()
-    laser_group = pygame.sprite.Group()
-    bomb_group = pygame.sprite.Group()
+    groups = {
+        'starship_group': pygame.sprite.Group(),
+        'enemy_group': pygame.sprite.Group(),
+        'laser_group': pygame.sprite.Group(),
+        'bomb_group': pygame.sprite.Group()
+    }
 
     # Game loop
     while True:
@@ -91,9 +83,9 @@ def main():
         # Create laser object if spacebar is pressed
         for event in pygame.event.get():
             if event.type == pygame.KEYUP and event.key == pygame.K_SPACE and game_active:
-                if is_laser is False and starship_group:
-                    laser_group = space_marauders.game_management.fire.create_projectile(
-                        starship_group,
+                if is_laser is False and groups['starship_group']:
+                    groups['laser_group'] = space_marauders.game_management.fire.create_projectile(
+                        groups['starship_group'],
                         PLAYER,
                         LASER,
                         setup['laser_width'],
@@ -117,96 +109,84 @@ def main():
 
         # check game state for active game and update display accordingly
         if game_active:
-            if len(enemy_group) == 0:
+            if len(groups['enemy_group']) == 0:
                 # Create enemies
-                enemy_group = space_marauders.game_management.deploy.create_enemies(
+                groups['enemy_group'] = space_marauders.game_management.deploy.create_enemies(
                     enemy_fire_rate,
                     enemy_speed,
                     10
                 )
 
-            if len(starship_group) == 0:
+            if len(groups['starship_group']) == 0:
                 # create player starship object
-                starship_group = space_marauders.game_management.deploy.create_starship(starship_fire_rate)
+                groups['starship_group'] = space_marauders.game_management.deploy.create_starship(starship_fire_rate)
 
-            starship_group.update()
+            groups['starship_group'].update()
 
             # Check for laser existence and collision
-            if is_laser is True:
-                for laser in laser_group:
-                    if laser.get_current_position()[1] < - 100:
-                        is_laser = False
-                    elif pygame.sprite.groupcollide(laser_group, enemy_group, True, True):
-                        is_laser = False
-                        enemies_hit += 1
-                        level_score += 25
-                        if len(enemy_group) == 0:
-                            # game_active = False
-                            game_over_time = pygame.time.get_ticks()
-                            calculate_score = True
-                            game_over = True
-                            space_marauders.game_management.runtime.clear_all_groups([
-                                bomb_group,
-                                laser_group,
-                                starship_group,
-                                enemy_group
-                            ])
-                            level_score += 1000
+            is_laser = space_marauders.game_management.runtime.check_collision(
+                is_laser=is_laser,
+                groups=groups,
+                enemies_hit=enemies_hit,
+                level_score=level_score
+            )
 
             # Check to see if new enemy should be created; will later be replaced by levels, scoring, and resets
-            if enemy_group and is_enemy is False:
+            if groups['enemy_group'] and is_enemy is False:
                 is_enemy = True
-            elif not enemy_group and is_enemy is True:
+            elif not groups['enemy_group'] and is_enemy is True:
                 is_enemy = False
-                enemy_group = space_marauders.game_management.deploy.create_enemies(
-                    SCREEN_WIDTH,
-                    SCREEN_HEIGHT,
-                    setup['alien_ship_size'],
-                    enemy_fire_rate,
-                    enemy_speed,
-                    10
+                groups['enemy_group'] = space_marauders.game_management.deploy.create_enemies(
+                    fire_rate=enemy_fire_rate,
+                    speed=enemy_speed,
+                    object_count=10
                 )
 
             # Check if enough time has passed to drop a bomb, if so, drop bomb
             if is_bomb is False:
                 new_bombs = space_marauders.game_management.fire.create_projectile(
-                    enemy_group,
+                    groups['enemy_group'],
                     ENEMY,
                     BOMB,
                     setup['bomb_size'],
                     setup['bomb_size'],
                     bomb_speed
                 )
-                bomb_group.add(new_bombs)
+                groups['bomb_group'].add(new_bombs)
                 last_bomb_time = pygame.time.get_ticks()
                 is_bomb = True
+
             elif is_bomb is True and pygame.time.get_ticks() - last_bomb_time >= enemy.get_enemy_fire_rate():
                 is_bomb = False
+
             else:
-                for bomb in bomb_group:
+                for bomb in groups['bomb_group']:
                     if is_bomb is True and bomb.get_current_position()[1] > SCREEN_HEIGHT + 100:
                         bomb.kill()
-                    elif pygame.sprite.groupcollide(starship_group, bomb_group, True, True):
+
+                    elif pygame.sprite.groupcollide(groups['starship_group'], groups['bomb_group'], True, True):
                         # game_active = False
                         game_over_time = pygame.time.get_ticks()
                         calculate_score = True
                         game_over = True
                         space_marauders.game_management.runtime.clear_all_groups([
-                            bomb_group,
-                            laser_group,
-                            starship_group,
-                            enemy_group
+                            groups['bomb_group'],
+                            groups['laser_group'],
+                            groups['starship_group'],
+                            groups['enemy_group']
                         ])
-                    elif pygame.sprite.groupcollide(bomb_group, laser_group, True, True):
+
+                    elif pygame.sprite.groupcollide(groups['bomb_group'], groups['laser_group'], True, True):
                         is_laser = False
                         level_score += 5
-                if len(bomb_group) == 0:
+
+                if len(groups['bomb_group']) == 0:
                     is_bomb = False
 
             # If any enemy is nearing the edge of the screen, update the move_direction variable;
             # this variable is then passed into the enemy group update method to move all of the
             # enemies in the correct direction
-            for enemy in enemy_group:
+            for enemy in groups['enemy_group']:
                 x_position = enemy.get_current_position()[0]
                 width = enemy.get_enemy_width()
                 if x_position - (width / 2) < 10:
@@ -222,19 +202,19 @@ def main():
             # Draw group objects to the screen in order from lowest z-score to highest z-score;
             # if the display surface (SCREEN) has a z-score of 0, then:
             game.blit(game.background, (0, 0))       # background image; z-score = 1
-            laser_group.draw(game)             # draw lasers; z-score = 2
-            bomb_group.draw(game)              # draw bombs; z-score = 3
-            enemy_group.draw(game)             # draw enemies; z-score = 4
-            starship_group.draw(game)          # draw starship; z-score = 5
+            groups['laser_group'].draw(game)             # draw lasers; z-score = 2
+            groups['bomb_group'].draw(game)              # draw bombs; z-score = 3
+            groups['enemy_group'].draw(game)             # draw enemies; z-score = 4
+            groups['starship_group'].draw(game)          # draw starship; z-score = 5
 
             # Update all object positions
-            laser_group.update()                 # update the y coordinate of the laser; x coordinate is static
-            bomb_group.update()                  # update the y coordinate of the bombs; x coordinate is static        
+            groups['laser_group'].update()                 # update the y coordinate of the laser; x coordinate is static
+            groups['bomb_group'].update()                  # update the y coordinate of the bombs; x coordinate is static        
             if move_direction == LEFT:           
-                enemy_group.update(LEFT, drop_one_row)         # update the x and y coordinates of the enemies
+                groups['enemy_group'].update(LEFT, drop_one_row)         # update the x and y coordinates of the enemies
 
             elif move_direction == RIGHT:
-                enemy_group.update(RIGHT, drop_one_row)        # update the x and y coordinates of the enemies
+                groups['enemy_group'].update(RIGHT, drop_one_row)        # update the x and y coordinates of the enemies
 
             # Display the current score
             score_surface = SCORE_FONT.render(f'Score: {level_score}', True, WHITE)
