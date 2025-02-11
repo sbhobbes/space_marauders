@@ -52,11 +52,11 @@ def game_over_animation():
     pass
 
 
-def clear_all_groups(group_list):
+def clear_all_groups(groups):
     '''
     Remove all groups from the screen.
     '''
-    for group in group_list:
+    for _, group in groups.items():
         group.empty()
 
 

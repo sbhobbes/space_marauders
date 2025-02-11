@@ -3,7 +3,7 @@ import space_marauders
 
 
 # Create player starship function
-def create_starship(starship_fire_rate: int):
+def create_starship():
     '''
     Create a player starship.
     '''
@@ -16,7 +16,7 @@ def create_starship(starship_fire_rate: int):
     starship = space_marauders.starships.starship.Starship(
         width=setup['player_ship_size'],
         height=setup['player_ship_size'],
-        fire_rate=starship_fire_rate,
+        fire_rate=setup['player_fire_rate'],
         starting_x_position=(setup['screen_width'] / 2),
         starting_y_position=(setup['screen_height'] / 8 * 7.5),
         move_rate=10
@@ -29,9 +29,6 @@ def create_starship(starship_fire_rate: int):
 
 # Create enemies function
 def create_enemies(
-    # size: int,
-    fire_rate: int,
-    speed: int,
     object_count: int
 ):
     '''
@@ -47,10 +44,10 @@ def create_enemies(
         new_enemy = space_marauders.aliens.starship.Enemy(
             width=setup['alien_ship_size'],
             height=setup['alien_ship_size'],
-            fire_rate=fire_rate,
+            fire_rate=setup['alien_fire_rate'],
             starting_x_position=((setup['screen_width'] / (object_count + 1)) * (enemy + 1)),
             starting_y_position=(setup['screen_height'] / 8 * 0.5),
-            move_rate=speed
+            move_rate=setup['alien_speed']
         )
         group.add(new_enemy)
 

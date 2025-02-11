@@ -2,9 +2,26 @@ screen_width: 1200
 screen_height: 900
 fps: 60
 player_ship_size: 50
+player_fire_rate: 5000
 alien_ship_size: 50
+alien_fire_rate: 5000
+alien_speed: 1
 laser_width: 5
 laser_length: 25
+laser_speed: 10
 bomb_size: 15
+bomb_speed: 4
 font_name: 'freesansbold.ttf'
 background_image: 'background_space.png'
+
+player:
+  projectile_type: laser
+  projectile_width: 5
+  projectile_length: 25
+  projectile_speed: 10
+
+enemy:
+  projectile_type: bomb
+  projectile_width: 15
+  projectile_length: 15
+  projectile_speed: 4
