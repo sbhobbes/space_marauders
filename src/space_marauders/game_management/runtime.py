@@ -33,12 +33,13 @@ def check_collision(is_laser, groups, enemies_hit, level_score):
                     game_over_time = pygame.time.get_ticks()
                     calculate_score = True
                     game_over = True
-                    space_marauders.game_management.runtime.clear_all_groups([
-                        bomb_group,
-                        laser_group,
-                        starship_group,
-                        enemy_group
-                    ])
+                    space_marauders.game_management.runtime.clear_all_groups(groups)
+                    # space_marauders.game_management.runtime.clear_all_groups([
+                    #     bomb_group,
+                    #     laser_group,
+                    #     starship_group,
+                    #     enemy_group
+                    # ])
                     level_score += 1000
 
     return is_laser

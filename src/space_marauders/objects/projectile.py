@@ -91,3 +91,54 @@ class Projectile(pygame.sprite.Sprite):
         Get the current x and y coordinates of the projectile.
         '''
         return self.position_x, self.position_y
+
+
+class ProjectileGroup(pygame.sprite.Group):
+    def __init__(self, *sprites, **kwargs):
+        super().__init__(*sprites)
+        self.starship_group = kwargs.get('starship_group', None)
+        self.projectile_origin = kwargs.get('projectile_origin', None)
+        self.setup = space_marauders.utils.helpers.get_metadata('setup.yaml')[self.projectile_origin]
+
+
+    def update(self, *args, **kwargs):
+        '''
+        Overrides the update method to include custom logic.
+        Calls super().update() within this function to keep default behavior.
+        '''
+        for sprite in self.sprites():
+            if hasattr(sprite, 'my_sprite_attribute'):
+                one = 1
+
+        super().update(*args, **kwargs)
+
+
+    def add(self, *sprites):
+        '''
+        Overrides the add method to include custom logic.
+        Calls super().add() within this function to keep default behavior.
+        '''
+        super().add(*sprites)
+
+
+    def draw(self, surface):
+        '''
+        Overrides the draw method to include custom logic.
+        Calls super().draw() within this function to keep default behavior.
+        '''
+        super().draw(surface)
+
+
+    def fire(self):
+        for ship in self.starship_group:
+            ship_x_position, ship_y_position = ship.get_current_position()
+            projectile = Projectile(
+                original_x_position=ship_x_position,
+                original_y_position=ship_y_position,
+                projectile_origin=self.projectile_origin,
+                projectile_type=self.setup['projectile_type'],
+                projectile_width=self.setup['projectile_width'],
+                projectile_length=self.setup['projectile_length'],
+                projectile_speed=self.setup['projectile_speed']
+            )
+            self.add(projectile)

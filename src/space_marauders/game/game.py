@@ -72,7 +72,9 @@ class Game():
         if self.game_active:
             if len(self.groups['enemy_group']) == 0:
                 # Create enemies
-                self.groups['enemy_group'] = space_marauders.game_management.deploy.create_enemies(10)
+                self.groups['enemy_group'] = space_marauders.aliens.starship.AlienStarshipGroup()
+                self.groups['enemy_group'].deploy()
+                # self.groups['enemy_group'] = space_marauders.game_management.deploy.create_enemies(10)
 
             if len(self.groups['starship_group']) == 0:
                 # create player starship object
@@ -145,18 +147,7 @@ class Game():
 
 
     def check_enemy_position(self):
-        for enemy in self.groups['enemy_group']:
-            x_position = enemy.get_current_position()[0]
-            width = enemy.get_enemy_width()
-            if x_position - (width / 2) < 10:
-                self.move_direction = self.RIGHT
-                self.drop_one_row = True
-                break
-
-            if x_position + (width / 2) > self.setup['screen_width'] - 10:
-                self.move_direction = self.LEFT
-                self.drop_one_row = True
-                break
+        self.move_direction, self.drop_one_row = self.groups['enemy_group'].check_boundary_collision()
 
 
     def repaint_screen(self):

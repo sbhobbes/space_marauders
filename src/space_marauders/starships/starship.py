@@ -72,3 +72,50 @@ class Starship(pygame.sprite.Sprite):
         Method to return the current x and y coordinates of the player starship.
         '''
         return self.current_x_position, self.starting_y_position
+
+
+class PlayerStarshipGroup(pygame.sprite.Group):
+    def __init__(self, *sprites, **kwargs):
+        setup = space_marauders.utils.helpers.get_metadata('setup.yaml')
+
+        super().__init__(*sprites)
+        self.starship = Starship(
+            width=setup['player_ship_size'],
+            height=setup['player_ship_size'],
+            fire_rate=setup['player_fire_rate'],
+            starting_x_position=(setup['screen_width'] / 2),
+            starting_y_position=(setup['screen_height'] / 8 * 7.5),
+            move_rate=10
+        )
+
+
+    def update(self, *args, **kwargs):
+        '''
+        Overrides the update method to include custom logic.
+        Calls super().update() within this function to keep default behavior.
+        '''
+        for sprite in self.sprites():
+            if hasattr(sprite, 'my_sprite_attribute'):
+                one = 1
+
+        super().update(*args, **kwargs)
+
+
+    def add(self, *sprites):
+        '''
+        Overrides the add method to include custom logic.
+        Calls super().add() within this function to keep default behavior.
+        '''
+        super().add(*sprites)
+
+
+    def draw(self, surface):
+        '''
+        Overrides the draw method to include custom logic.
+        Calls super().draw() within this function to keep default behavior.
+        '''
+        super().draw(surface)
+
+
+    def deploy(self):
+        self.add(self.starship)
