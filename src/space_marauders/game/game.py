@@ -52,14 +52,14 @@ class Game():
                 # If there's no laser currently in the game and the player starship exists
                 if self.is_laser is False and self.groups['starship_group']:
                     # Fire a laser with the player starship as the origin point
-                    # self.groups['laser_group'] = space_marauders.game_management.fire.create_projectile(
-                    #     self.groups['starship_group'],
-                    #     self.PLAYER
-                    # )
-                    for ship in self.groups['starship_group']:
-                        ship.fire_laser()
-                        ship.update()
-                        ship.draw(self.interface)
+                    self.groups['laser_group'] = space_marauders.game_management.fire.create_projectile(
+                        self.groups['starship_group'],
+                        self.PLAYER
+                    )
+                    # for ship in self.groups['starship_group']:
+                    #     ship.fire_laser()
+                    #     ship.update()
+                    #     ship.draw(self.interface)
 
                     self.lasers_fired += 1
                     self.is_laser = True
