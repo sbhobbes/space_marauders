@@ -26,6 +26,7 @@ class Starship(pygame.sprite.Sprite):
         move_rate: int
     ):
         super().__init__()
+        self.setup = space_marauders.utils.helpers.get_metadata('setup.yaml')['player']
         self.LEFT = 'left'                              # used to check the direction of the player starship
         self.RIGHT = 'right'                            # used to check the direction of the player starship
         self.width = width                              # the width of the player starship
@@ -35,6 +36,7 @@ class Starship(pygame.sprite.Sprite):
         self.starting_x_position = starting_x_position                      # starting x coordinate of the player starship
         self.starting_y_position = starting_y_position                      # starting y coordinate of the player starship
         self.current_x_position = self.starting_x_position               # current x coordinate position of the player starship
+        self.projectiles = pygame.sprite.Group()
 
         # Create the graphics for the player starship; define the path, resize the image, assign the image to a rect
         # object of the same size, and finally set the position of the image on the screen.
@@ -65,6 +67,7 @@ class Starship(pygame.sprite.Sprite):
         position of the starship using either the arrow keys or asdw.
         '''
         self.input()
+        self.projectiles.update()
 
 
     def get_current_position(self):
@@ -72,6 +75,36 @@ class Starship(pygame.sprite.Sprite):
         Method to return the current x and y coordinates of the player starship.
         '''
         return self.current_x_position, self.starting_y_position
+
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+        self.projectiles.draw(screen)
+
+
+    def fire_laser(self):
+        projectile = space_marauders.objects.projectile.Projectile(
+            original_x_position=self.rect.centerx,
+            original_y_position=self.rect.centery,
+            projectile_origin='player',
+            projectile_type=self.setup['projectile_type'],
+            projectile_width=self.setup['projectile_width'],
+            projectile_length=self.setup['projectile_length'],
+            projectile_speed=self.setup['projectile_speed']
+        )
+        self.projectiles.add(projectile)
+    # def fire_laser(self):
+    #     ship_x_position, ship_y_position = ship.get_current_position()
+    #     projectile = Projectile(
+    #         original_x_position=ship_x_position,
+    #         original_y_position=ship_y_position,
+    #         projectile_origin=self.projectile_origin,
+    #         projectile_type=self.setup['projectile_type'],
+    #         projectile_width=self.setup['projectile_width'],
+    #         projectile_length=self.setup['projectile_length'],
+    #         projectile_speed=self.setup['projectile_speed']
+    #     )
+    #     self.add(projectile)
 
 
 class PlayerStarshipGroup(pygame.sprite.Group):

@@ -168,12 +168,10 @@ class AlienStarshipGroup(pygame.sprite.Group):
             max_right_edge = max(max_right_edge, alien_right_edge)
 
         if min_left_edge < 10:
-            print('Left side collision')
             self.direction_to_set = 'right'
             drop_row_needed = True
 
         if max_right_edge > self.setup['screen_width'] - 10:
-            print('Right side collision')
             self.direction_to_set = 'left'
             drop_row_needed = True
 

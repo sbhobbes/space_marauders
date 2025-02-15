@@ -45,24 +45,27 @@ class Game():
 
 
     def check_events(self):
+        # Iterate through all game events
         for event in pygame.event.get():
+            # If the spacebar was pressed and there's an active game
             if event.type == pygame.KEYUP and event.key == pygame.K_SPACE and self.game_active:
+                # If there's no laser currently in the game and the player starship exists
                 if self.is_laser is False and self.groups['starship_group']:
-                    self.groups['laser_group'] = space_marauders.game_management.fire.create_projectile(
-                        self.groups['starship_group'],
-                        self.PLAYER
-                    )
+                    # Fire a laser with the player starship as the origin point
+                    # self.groups['laser_group'] = space_marauders.game_management.fire.create_projectile(
+                    #     self.groups['starship_group'],
+                    #     self.PLAYER
+                    # )
+                    for ship in self.groups['starship_group']:
+                        ship.fire_laser()
+                        ship.update()
+                        ship.draw(self.interface)
+
                     self.lasers_fired += 1
                     self.is_laser = True
 
-            elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
-                pass
-
             elif event.type == pygame.MOUSEBUTTONDOWN and self.new_game_button.collidepoint(pygame.mouse.get_pos()):
                 self.game_active = True
-
-            elif event.type == pygame.MOUSEBUTTONDOWN and not self.new_game_button.collidepoint(pygame.mouse.get_pos()):
-                pass
 
             else:
                 pygame.event.post(event)
