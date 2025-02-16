@@ -1,7 +1,7 @@
 import numpy as np
 import pygame
 # import space_marauders
-from .. import aliens, game_management, utils
+from .. import aliens, base_objects, game_management, utils
 
 
 class Game():
@@ -17,19 +17,15 @@ class Game():
         self.RIGHT = 'right'
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
+        self.alien_speed = 2
+        self.alien_drop_amount = 20
         self.enemies_hit = 0
         self.level_score = 0
         self.total_score = 0
         self.lasers_fired = 0
         self.player_accuracy = 0
-        self.is_laser = False
-        self.is_enemy = False
-        self.is_bomb = False
-        self.drop_one_row = False
-        self.move_direction = self.LEFT
         self.game_over = False
         self.game_over_time = 0
-        self.last_bomb_time = 0
         self.calculate_score = False
         self.setup = utils.helpers.get_metadata('setup.yaml')
         self.fps_clock = pygame.time.Clock()
@@ -48,55 +44,31 @@ class Game():
     def check_events(self):
         # Iterate through all game events
         for event in pygame.event.get():
-            # If the spacebar was pressed and there's an active game
-            if event.type == pygame.KEYUP and event.key == pygame.K_SPACE and self.game_active:
-                # If there's no laser currently in the game and the player starship exists
-                if self.is_laser is False and self.groups['starship_group']:
-                    # Fire a laser with the player starship as the origin point
-                    self.groups['laser_group'] = game_management.fire.create_projectile(
-                        self.groups['starship_group'],
-                        self.PLAYER
-                    )
-                    # for ship in self.groups['starship_group']:
-                    #     ship.fire_laser()
-                    #     ship.update()
-                    #     ship.draw(self.interface)
-
-                    self.lasers_fired += 1
-                    self.is_laser = True
-
-            elif event.type == pygame.MOUSEBUTTONDOWN and self.new_game_button.collidepoint(pygame.mouse.get_pos()):
+            if event.type == pygame.MOUSEBUTTONDOWN and self.new_game_button.collidepoint(pygame.mouse.get_pos()):
                 self.game_active = True
-
-            else:
-                pygame.event.post(event)
 
 
     def check_game_state(self):
         if self.game_active:
             if len(self.groups['enemy_group']) == 0:
-                # Create enemies
-                self.groups['enemy_group'] = aliens.alien_starship.AlienStarshipGroup()
-                self.groups['enemy_group'].deploy()
-                # self.groups['enemy_group'] = space_marauders.game_management.deploy.create_enemies(10)
+                self.groups['enemy_group'] = game_management.deploy.create_enemies(10)
 
-            if len(self.groups['starship_group']) == 0:
-                # create player starship object
+            if not self.groups['starship_group']:
                 self.groups['starship_group'] = game_management.deploy.create_starship()
 
-            self.groups['starship_group'].update()
+            for alien in self.groups['enemy_group']:
+                alien.rect.x += self.alien_speed
 
-            # Check for laser existence and collision
-            self.is_laser = game_management.runtime.check_collision(
-                is_laser=self.is_laser,
-                groups=self.groups,
-                enemies_hit=self.enemies_hit,
-                level_score=self.level_score
-            )
+            group_rect = self.groups['enemy_group'].sprites()[0].rect.copy()
+            for alien in self.groups['enemy_group']:
+                group_rect.union_ip(alien.rect)
 
-            self.check_enemy_state()
-            self.check_bomb_state()
-            self.check_enemy_position()
+            if group_rect.left < 0 or group_rect.right > self.setup['screen_width']:
+                self.alien_speed *= -1
+                for alien in self.groups['enemy_group']:
+                    alien.rect.y += self.alien_drop_amount
+
+            self.check_collisions()
             self.repaint_screen()
             self.update_score()
 
@@ -105,72 +77,37 @@ class Game():
 
         self.check_game_over()
 
-        # apply all of the updates to the display surface
         pygame.display.update()
 
 
-    def check_enemy_state(self):
-        if self.groups['enemy_group'] and self.is_enemy is False:
-            self.is_enemy = True
+    def check_collisions(self):
+        for alien in self.groups['enemy_group']:
+            player_hit = pygame.sprite.spritecollide(self.groups['starship_group'], alien.projectiles, True)
+            if player_hit:
+                self.game_over = True
 
-        elif not self.groups['enemy_group'] and self.is_enemy is True:
-            self.is_enemy = False
-            self.groups['enemy_group'] = game_management.deploy.create_enemies(10)
+        for projectile in self.groups['starship_group'].projectiles:
+            alien_hit = pygame.sprite.spritecollide(projectile, self.groups['enemy_group'], True)
+            if alien_hit:
+                projectile.kill()
+                # Add scoring here
 
-
-    def check_bomb_state(self):
-        if self.is_bomb is False:
-            new_bombs = game_management.fire.create_projectile(
-                self.groups['enemy_group'],
-                self.ALIEN
-            )
-            self.groups['bomb_group'].add(new_bombs)
-            self.last_bomb_time = pygame.time.get_ticks()
-            self.is_bomb = True
-
-        elif self.is_bomb is True and pygame.time.get_ticks() - self.last_bomb_time >= np.max([x.get_enemy_fire_rate() for x in self.groups['enemy_group']]):
-            self.is_bomb = False
-
-        else:
-            for bomb in self.groups['bomb_group']:
-                if self.is_bomb is True and bomb.get_current_position()[1] > self.setup['screen_height'] + 100:
-                    bomb.kill()
-
-                elif pygame.sprite.groupcollide(self.groups['starship_group'], self.groups['bomb_group'], True, True):
-                    self.game_over_time = pygame.time.get_ticks()
-                    self.calculate_score = True
-                    self.game_over = True
-                    game_management.runtime.clear_all_groups(self.groups)
-
-                elif pygame.sprite.groupcollide(self.groups['bomb_group'], self.groups['laser_group'], True, True):
-                    self.is_laser = False
-                    self.level_score += 5
-
-            if len(self.groups['bomb_group']) == 0:
-                self.is_bomb = False
-
-
-    def check_enemy_position(self):
-        self.move_direction, self.drop_one_row = self.groups['enemy_group'].check_boundary_collision()
+            for alien in self.groups['enemy_group']:
+                projectile_collision = pygame.sprite.spritecollide(projectile, alien.projectiles, True)
+                if projectile_collision:
+                    projectile.kill()
 
 
     def repaint_screen(self):
         self.interface.blit(self.interface.background, (0, 0))       # background image; z-score = 1
-        self.groups['laser_group'].draw(self.interface)             # draw lasers; z-score = 2
-        self.groups['bomb_group'].draw(self.interface)              # draw bombs; z-score = 3
-        self.groups['enemy_group'].draw(self.interface)             # draw enemies; z-score = 4
-        self.groups['starship_group'].draw(self.interface)          # draw starship; z-score = 5
+        for _, obj in self.groups.items():
+            if isinstance(obj, pygame.sprite.Group):
+                for sprite in obj:
+                    if isinstance(sprite, base_objects.base_starship.BaseStarship):
+                        sprite.projectiles.draw(self.interface)
 
-        # Update all object positions
-        self.groups['laser_group'].update()                 # update the y coordinate of the laser; x coordinate is static
-        self.groups['bomb_group'].update()                  # update the y coordinate of the bombs; x coordinate is static        
-        if self.move_direction == self.LEFT:           
-            self.groups['enemy_group'].update(self.LEFT, self.drop_one_row)         # update the x and y coordinates of the enemies
-            self.drop_one_row = False
-
-        elif self.move_direction == self.RIGHT:
-            self.groups['enemy_group'].update(self.RIGHT, self.drop_one_row)        # update the x and y coordinates of the enemies
-            self.drop_one_row = False
+            obj.update()
+            obj.draw(self.interface)
 
 
     def update_score(self):
@@ -210,7 +147,8 @@ class Game():
         run_game = True
 
         while run_game is True:
-            self.fps_clock.tick(self.setup['fps'])
             game_management.runtime.check_for_quit()
             self.check_events()
             self.check_game_state()
+            pygame.display.flip()
+            self.fps_clock.tick(self.setup['fps'])

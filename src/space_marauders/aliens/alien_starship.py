@@ -189,5 +189,5 @@ class AlienStarship(base_objects.base_starship.BaseStarship):
 
         current_time = pygame.time.get_ticks()
         if current_time - self.fire_timer > 2000:
-            self.fire('machine_gun_03.png', 5)
+            self.fire('machine_gun_03.png', 2.5)
             self.fire_time = current_time

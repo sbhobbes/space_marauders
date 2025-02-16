@@ -14,8 +14,9 @@ def create_projectile(
     Create a projectile fired from the player starship.
     '''
     # Create the projectile group object
-    group = space_marauders.objects.projectile.ProjectileGroup(projectile_origin=origin, starship_group=ship_group)
-    group.fire()
+    # group = space_marauders.objects.projectile.ProjectileGroup(projectile_origin=origin, starship_group=ship_group)
+    # group.fire()
+    ship_group.update()
 
     # Return the group of projectile objects to the calling function
-    return group
+    # return group
