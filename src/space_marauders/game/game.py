@@ -1,6 +1,7 @@
 import numpy as np
 import pygame
-import space_marauders
+# import space_marauders
+from .. import aliens, game_management, utils
 
 
 class Game():
@@ -30,7 +31,7 @@ class Game():
         self.game_over_time = 0
         self.last_bomb_time = 0
         self.calculate_score = False
-        self.setup = space_marauders.utils.helpers.get_metadata('setup.yaml')
+        self.setup = utils.helpers.get_metadata('setup.yaml')
         self.fps_clock = pygame.time.Clock()
         self.game_active = False
         self. groups = {
@@ -39,7 +40,7 @@ class Game():
             'laser_group': pygame.sprite.Group(),
             'bomb_group': pygame.sprite.Group()
         }
-        self.interface = space_marauders.game_management.layout.Screen()
+        self.interface = game_management.layout.Screen()
         self.SCREEN = self.interface.get_screen()
         self.SCORE_FONT = pygame.font.Font(self.setup['font_name'], 20)
 
@@ -52,7 +53,7 @@ class Game():
                 # If there's no laser currently in the game and the player starship exists
                 if self.is_laser is False and self.groups['starship_group']:
                     # Fire a laser with the player starship as the origin point
-                    self.groups['laser_group'] = space_marauders.game_management.fire.create_projectile(
+                    self.groups['laser_group'] = game_management.fire.create_projectile(
                         self.groups['starship_group'],
                         self.PLAYER
                     )
@@ -75,18 +76,18 @@ class Game():
         if self.game_active:
             if len(self.groups['enemy_group']) == 0:
                 # Create enemies
-                self.groups['enemy_group'] = space_marauders.aliens.starship.AlienStarshipGroup()
+                self.groups['enemy_group'] = aliens.alien_starship.AlienStarshipGroup()
                 self.groups['enemy_group'].deploy()
                 # self.groups['enemy_group'] = space_marauders.game_management.deploy.create_enemies(10)
 
             if len(self.groups['starship_group']) == 0:
                 # create player starship object
-                self.groups['starship_group'] = space_marauders.game_management.deploy.create_starship()
+                self.groups['starship_group'] = game_management.deploy.create_starship()
 
             self.groups['starship_group'].update()
 
             # Check for laser existence and collision
-            self.is_laser = space_marauders.game_management.runtime.check_collision(
+            self.is_laser = game_management.runtime.check_collision(
                 is_laser=self.is_laser,
                 groups=self.groups,
                 enemies_hit=self.enemies_hit,
@@ -114,12 +115,12 @@ class Game():
 
         elif not self.groups['enemy_group'] and self.is_enemy is True:
             self.is_enemy = False
-            self.groups['enemy_group'] = space_marauders.game_management.deploy.create_enemies(10)
+            self.groups['enemy_group'] = game_management.deploy.create_enemies(10)
 
 
     def check_bomb_state(self):
         if self.is_bomb is False:
-            new_bombs = space_marauders.game_management.fire.create_projectile(
+            new_bombs = game_management.fire.create_projectile(
                 self.groups['enemy_group'],
                 self.ALIEN
             )
@@ -139,7 +140,7 @@ class Game():
                     self.game_over_time = pygame.time.get_ticks()
                     self.calculate_score = True
                     self.game_over = True
-                    space_marauders.game_management.runtime.clear_all_groups(self.groups)
+                    game_management.runtime.clear_all_groups(self.groups)
 
                 elif pygame.sprite.groupcollide(self.groups['bomb_group'], self.groups['laser_group'], True, True):
                     self.is_laser = False
@@ -210,6 +211,6 @@ class Game():
 
         while run_game is True:
             self.fps_clock.tick(self.setup['fps'])
-            space_marauders.game_management.runtime.check_for_quit()
+            game_management.runtime.check_for_quit()
             self.check_events()
             self.check_game_state()

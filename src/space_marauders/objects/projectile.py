@@ -142,3 +142,24 @@ class ProjectileGroup(pygame.sprite.Group):
                 projectile_speed=self.setup['projectile_speed']
             )
             self.add(projectile)
+
+
+class ProjectileNew(pygame.sprite.Sprite):
+    def __init__(self, x, y, image_path, speed, faction):
+        super().__init__()
+        self.screen_height = space_marauders.utils.helpers.get_metadata('setup.yaml')['screen_height']
+        self.image = space_marauders.utils.helpers.load_asset(image_path, base_path='projectiles')
+        self.rect = self.image.get_rect(center=(x, y))
+        self.speed = speed
+        self.faction = faction
+
+
+    def update(self):
+        if self.faction == 'player':
+            self.rect.y -= self.speed
+
+        else:
+            self.rect.y += self.speed
+
+        if self.rect.y < 0 or self.rect.y > self.screen_height:
+            self.kill()

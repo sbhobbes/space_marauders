@@ -1,0 +1,4 @@
+numpy==2.2.3
+pygame==2.6.1
+PyYAML==6.0.2
+-e git+https://github.com/sbhobbes/space_marauders.git@cae9f554b4658b6ac49c22dea80533b13046f4ee#egg=space_marauders

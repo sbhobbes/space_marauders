@@ -8,7 +8,7 @@ def create_starship():
     Create a player starship.
     '''
     # Create the starship group object
-    group = space_marauders.starships.starship.PlayerStarshipGroup()
+    group = space_marauders.player.player_starship.PlayerStarshipGroup()
     group.deploy()
 
     # Return the starship group object to the calling function
@@ -23,7 +23,7 @@ def create_enemies(
     Create enemies on the screen.
     '''
     # Create the enemies group object
-    group = space_marauders.aliens.starship.AlienStarshipGroup(alien_count=object_count)
+    group = space_marauders.aliens.alien_starship.AlienStarshipGroup(alien_count=object_count)
     group.deploy()
 
     # Return the group of enemy objects to the calling function

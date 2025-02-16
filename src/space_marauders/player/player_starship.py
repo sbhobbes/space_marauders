@@ -8,7 +8,9 @@ This module contains the classes for the player starships.
 # Image assets credit to: https://github.com/exewin https://exewin.github.io/
 
 import pygame
-import space_marauders
+from ..utils.helpers import load_asset, get_metadata
+from ..base_objects.base_starship import BaseStarship
+from ..objects.projectile import Projectile
 
 
 # Player starship class, inherits pygame.sprite.Sprite
@@ -26,7 +28,7 @@ class Starship(pygame.sprite.Sprite):
         move_rate: int
     ):
         super().__init__()
-        self.setup = space_marauders.utils.helpers.get_metadata('setup.yaml')['player']
+        self.setup = get_metadata('setup.yaml')['player']
         self.LEFT = 'left'                              # used to check the direction of the player starship
         self.RIGHT = 'right'                            # used to check the direction of the player starship
         self.width = width                              # the width of the player starship
@@ -40,7 +42,7 @@ class Starship(pygame.sprite.Sprite):
 
         # Create the graphics for the player starship; define the path, resize the image, assign the image to a rect
         # object of the same size, and finally set the position of the image on the screen.
-        self.image = space_marauders.utils.helpers.load_asset('sky_blanc_2.png', base_path='ships')
+        self.image = load_asset('sky_blanc_2.png', base_path='ships')
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
         self.rect.center = (self.current_x_position, self.starting_y_position)
@@ -83,7 +85,7 @@ class Starship(pygame.sprite.Sprite):
 
 
     def fire_laser(self):
-        projectile = space_marauders.objects.projectile.Projectile(
+        projectile = Projectile(
             original_x_position=self.rect.centerx,
             original_y_position=self.rect.centery,
             projectile_origin='player',
@@ -109,7 +111,7 @@ class Starship(pygame.sprite.Sprite):
 
 class PlayerStarshipGroup(pygame.sprite.Group):
     def __init__(self, *sprites, **kwargs):
-        setup = space_marauders.utils.helpers.get_metadata('setup.yaml')
+        setup = get_metadata('setup.yaml')
 
         super().__init__(*sprites)
         self.starship = Starship(
@@ -152,3 +154,21 @@ class PlayerStarshipGroup(pygame.sprite.Group):
 
     def deploy(self):
         self.add(self.starship)
+
+
+class PlayerStarship(BaseStarship):
+    def __init__(self, x, y, image_path, speed, faction):
+        super().__init__(x, y, image_path, speed, faction)
+
+
+    def update(self):
+        super().update()
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.rect.x -= self.speed
+
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += self.speed
+
+        if keys[pygame.K_SPACE]:
+            self.fire('laser_03.png', 10)

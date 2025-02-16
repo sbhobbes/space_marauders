@@ -8,7 +8,7 @@ This module contains the classes for the alien starships.
 # Image assets credit to: https://github.com/exewin https://exewin.github.io/
 import numpy as np
 import pygame
-import space_marauders
+from .. import base_objects, utils
 
 
 # Enemy spaceship class, inherits pygame.sprite.Sprite
@@ -40,7 +40,7 @@ class Alien(pygame.sprite.Sprite):
 
         # Create the graphics for the enemy spaceship; define the path, resize the image, assign the image to a rect
         # object of the same size, and finally set the position of the image on the screen.
-        self.image = space_marauders.utils.helpers.load_asset('moroder_2.png', base_path='ships')
+        self.image = utils.helpers.load_asset('moroder_2.png', base_path='ships')
         self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
@@ -99,7 +99,7 @@ class Alien(pygame.sprite.Sprite):
 class AlienStarshipGroup(pygame.sprite.Group):
     def __init__(self, *sprites, **kwargs):
         self.alien_count = kwargs.get('alient_count', 10)
-        self.setup = space_marauders.utils.helpers.get_metadata('setup.yaml')
+        self.setup = utils.helpers.get_metadata('setup.yaml')
         self.direction_to_set = 'left'
 
         super().__init__(*sprites)
@@ -176,3 +176,18 @@ class AlienStarshipGroup(pygame.sprite.Group):
             drop_row_needed = True
 
         return self.direction_to_set, drop_row_needed
+
+
+class AlienStarship(base_objects.base_starship.BaseStarship):
+    def __init__(self, x, y, image_path, speed, faction):
+        super().__init__(x, y, image_path, speed, faction)
+        self.fire_timer = pygame.time.get_ticks()
+
+
+    def update(self):
+        super().update()
+
+        current_time = pygame.time.get_ticks()
+        if current_time - self.fire_timer > 2000:
+            self.fire('machine_gun_03.png', 5)
+            self.fire_time = current_time
