@@ -1,7 +1,13 @@
-import numpy as np
+'''
+
+Author: Seth Hobbes
+Company: Springboro Technologies, LLC DBA Monarch Technologies
+Date: 1/20/2022
+Property of Seth Hobbes, member of Monarch Technologies, all rights reserved
+Image assets credit to: https://github.com/exewin https://exewin.github.io/
+'''
 import pygame
-# import space_marauders
-from .. import aliens, base_objects, game_management, utils
+from .. import game_management, utils
 
 
 class Game():
@@ -9,15 +15,9 @@ class Game():
         pygame.init()
         pygame.font.init()
 
-        self.LASER = 'laser'
-        self.PLAYER = 'player'
-        self.ALIEN = 'enemy'
-        self.BOMB = 'bomb'
-        self.LEFT = 'left'
-        self.RIGHT = 'right'
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
-        self.alien_speed = 2
+        self.alien_speed = 1
         self.alien_drop_amount = 20
         self.enemies_hit = 0
         self.level_score = 0
@@ -30,19 +30,18 @@ class Game():
         self.setup = utils.helpers.get_metadata('setup.yaml')
         self.fps_clock = pygame.time.Clock()
         self.game_active = False
-        self. groups = {
-            'starship_group': pygame.sprite.Group(),
-            'enemy_group': pygame.sprite.Group(),
-            'laser_group': pygame.sprite.Group(),
-            'bomb_group': pygame.sprite.Group()
-        }
+        self.player = None
+        self.aliens = None
+        self.projectiles = None
+        self.alien_projectiles_group = pygame.sprite.Group()
+        self.player_projectiles_group = pygame.sprite.Group()
+        self.all_sprites = pygame.sprite.Group()
         self.interface = game_management.layout.Screen()
         self.SCREEN = self.interface.get_screen()
         self.SCORE_FONT = pygame.font.Font(self.setup['font_name'], 20)
 
 
     def check_events(self):
-        # Iterate through all game events
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN and self.new_game_button.collidepoint(pygame.mouse.get_pos()):
                 self.game_active = True
@@ -50,22 +49,25 @@ class Game():
 
     def check_game_state(self):
         if self.game_active:
-            if len(self.groups['enemy_group']) == 0:
-                self.groups['enemy_group'] = game_management.deploy.create_enemies(10)
+            if not self.aliens:
+                self.aliens = game_management.deploy.create_enemies(object_count=10, projectile_group=self.alien_projectiles_group)
+                self.all_sprites.add(self.aliens)
+            self.all_sprites.add(self.alien_projectiles_group)
+            self.all_sprites.add(self.player_projectiles_group)
+            if not self.player:
+                self.player = game_management.deploy.create_starship(projectile_group=self.player_projectiles_group)
+                self.all_sprites.add(self.player)
 
-            if not self.groups['starship_group']:
-                self.groups['starship_group'] = game_management.deploy.create_starship()
-
-            for alien in self.groups['enemy_group']:
+            for alien in self.aliens:
                 alien.rect.x += self.alien_speed
 
-            group_rect = self.groups['enemy_group'].sprites()[0].rect.copy()
-            for alien in self.groups['enemy_group']:
+            group_rect = self.aliens.sprites()[0].rect.copy()
+            for alien in self.aliens:
                 group_rect.union_ip(alien.rect)
 
             if group_rect.left < 0 or group_rect.right > self.setup['screen_width']:
                 self.alien_speed *= -1
-                for alien in self.groups['enemy_group']:
+                for alien in self.aliens:
                     alien.rect.y += self.alien_drop_amount
 
             self.check_collisions()
@@ -77,37 +79,35 @@ class Game():
 
         self.check_game_over()
 
-        pygame.display.update()
-
 
     def check_collisions(self):
-        for alien in self.groups['enemy_group']:
-            player_hit = pygame.sprite.spritecollide(self.groups['starship_group'], alien.projectiles, True)
-            if player_hit:
+        for alien in self.aliens:
+            if pygame.sprite.spritecollide(self.player, alien.projectiles, True):
                 self.game_over = True
 
-        for projectile in self.groups['starship_group'].projectiles:
-            alien_hit = pygame.sprite.spritecollide(projectile, self.groups['enemy_group'], True)
-            if alien_hit:
+        for projectile in self.player.projectiles:
+            if pygame.sprite.spritecollide(projectile, self.aliens, True):
                 projectile.kill()
-                # Add scoring here
 
-            for alien in self.groups['enemy_group']:
-                projectile_collision = pygame.sprite.spritecollide(projectile, alien.projectiles, True)
-                if projectile_collision:
+            for alien in self.aliens:
+                if pygame.sprite.spritecollide(projectile, alien.projectiles, True):
                     projectile.kill()
 
 
     def repaint_screen(self):
-        self.interface.blit(self.interface.background, (0, 0))       # background image; z-score = 1
-        for _, obj in self.groups.items():
-            if isinstance(obj, pygame.sprite.Group):
-                for sprite in obj:
-                    if isinstance(sprite, base_objects.base_starship.BaseStarship):
-                        sprite.projectiles.draw(self.interface)
+        # self.SCREEN.fill((180, 180, 180))
+        # self.SCREEN.blit(self.interface.background, (0, 0))
+        # self.interface.blit(self.interface.background, (0, 0))
+        self.interface.refresh_screen()
+        # for sprite in self.all_sprites:
+            # if isinstance(sprite, base_objects.base_starship.BaseStarship):
+                # sprite.projectiles.draw(self.interface)
 
-            obj.update()
-            obj.draw(self.interface)
+            # sprite.update()
+        # self.alien_projectiles_group.draw(self.interface)
+        self.player.projectiles.draw(self.interface)
+        self.all_sprites.draw(self.interface)
+        self.all_sprites.update()
 
 
     def update_score(self):

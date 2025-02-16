@@ -1,5 +1,11 @@
 '''
 Module to configure the GUI.
+
+Author: Seth Hobbes
+Company: Springboro Technologies, LLC DBA Monarch Technologies
+Date: 1/20/2022
+Property of Seth Hobbes, member of Monarch Technologies, all rights reserved
+Image assets credit to: https://github.com/exewin https://exewin.github.io/
 '''
 import pygame
 import space_marauders
@@ -8,9 +14,9 @@ import space_marauders
 class Screen():
     def __init__(self):
         self.setup = space_marauders.utils.helpers.get_metadata('setup.yaml')
-        self.screen = pygame.display.set_mode((self.setup['screen_width'], self.setup['screen_height']))
+        self.screen = pygame.display.set_mode((self.setup['screen_width'], self.setup['screen_height']), pygame.SRCALPHA)
         self.background_image = space_marauders.utils.helpers.load_asset(self.setup['background_image'])
-        self.background_image.set_alpha(150)
+        # self.background_image.set_alpha(150)
         self.background = pygame.transform.scale(self.background_image, (self.setup['screen_width'], self.setup['screen_height']))
         self.button_font = pygame.font.Font(self.setup['font_name'], 50)
         self.title_font = pygame.font.Font(self.setup['font_name'], 100)
@@ -29,6 +35,7 @@ class Screen():
         or when the escape key is pressed; however, the escape key would pull up the main menu
         in a pause game state.
         '''
+        self.screen.fill((180, 180, 180))
         self.screen.blit(self.background, (0, 0))
         _, new_game_rectangle = self.create_text_box(
             font=self.button_font,
@@ -82,6 +89,11 @@ class Screen():
 
     def blit(self, *args, **kwargs):
         self.screen.blit(*args, **kwargs)
+
+
+    def refresh_screen(self):
+        self.screen.fill((180, 180, 180))
+        self.blit(self.background, (0, 0))
 
 
     def display_score(self):
