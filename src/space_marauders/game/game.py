@@ -26,6 +26,7 @@ class Game():
         self.setup = utils.helpers.get_metadata('setup.yaml')
         self.fps_clock = pygame.time.Clock()
         self.active_game = False
+        self.demo_mode = False
         self.player = None
         self.aliens = None
         self.projectiles = None
@@ -40,15 +41,19 @@ class Game():
     def check_events(self):
         for event in pygame.event.get():
             game_management.runtime.check_for_quit(event)
-            if event.type == pygame.MOUSEBUTTONDOWN and self.new_game_button.collidepoint(pygame.mouse.get_pos()):
-                self.active_game = True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.new_game_button.collidepoint(pygame.mouse.get_pos()):
+                    self.active_game = True
+
+                elif self.demo_mode_button.collidepoint(pygame.mouse.get_pos()):
+                    self.demo_mode = True
 
             if self.player is not None:
                 self.player.handle_event(event)
 
 
     def check_game_state(self):
-        if self.active_game:
+        if self.active_game or self.demo_mode:
             if not self.aliens:
                 self.aliens = game_management.deploy.create_enemies(object_count=10, projectile_group=self.alien_projectiles_group)
                 self.all_sprites.add(self.aliens)
@@ -57,7 +62,10 @@ class Game():
             self.all_sprites.add(self.player_projectiles_group)
 
             if not self.player:
-                self.player = game_management.deploy.create_starship(projectile_group=self.player_projectiles_group)
+                self.player = game_management.deploy.create_starship(
+                    projectile_group=self.player_projectiles_group,
+                    game=self if self.demo_mode else None
+                )
                 self.all_sprites.add(self.player)
 
             for alien in self.aliens:
@@ -77,14 +85,13 @@ class Game():
             self.update_score()
 
         else:
-            self.new_game_button = self.interface.main_menu()
+            self.new_game_button, self.demo_mode_button = self.interface.main_menu()
 
         self.check_end_of_level()
         self.check_game_over()
 
 
     def check_collisions(self):
-        # for alien in self.aliens:
         if pygame.sprite.spritecollide(self.player, self.alien_projectiles_group, True):
             self.game_over = True
 
@@ -119,33 +126,8 @@ class Game():
     def check_end_of_level(self):
         if not self.aliens and self.active_game:
             self.level_completed = True
-            self.end_of_level_splash_screen()
-
-
-    def end_of_level_splash_screen(self):
-        splash_text =[
-            f'Level {self.level} completed!',
-            f'Level score: {self.player.get_current_score()}',
-            f'Total score: {self.player.get_current_score()}',
-            f'Shots fired: {self.player.shots_fired}',
-            f'Alien ships hit: {self.player.aliens_hit}',
-            f'Accuracy: {self.player.get_accuracy()} %'
-        ]
-        start_y = self.setup['screen_height'] // 3
-        line_spacing = 30
-
-        self.SCREEN.fill(self.BLACK)
-        for i, line in enumerate(splash_text):
-            text = self.SCORE_FONT.render(line, True, self.WHITE)
-            text_rect = text.get_rect(center=(self.setup['screen_width'] // 2, start_y + i * line_spacing))
-            self.SCREEN.blit(text, text_rect)
-
-        pygame.display.flip()
-
-        pygame.time.delay(2000)
-
-        self.level += 1
-        self.reset_for_next_level()
+            self.level = self.interface.show_level_complete(self.player, self.level)
+            self.reset_for_next_level()
 
 
     def reset_for_next_level(self):
@@ -159,51 +141,9 @@ class Game():
         self.active_game = True
 
 
-    def game_over_screen(self):
-        game_over_text = [
-            'Game Over!',
-            f'High level completed: {self.level - 1}',
-            f'Level score: {self.player.get_current_score()}',
-            f'Final score: {self.player.get_current_score()}',
-            f'Shots fired: {self.player.shots_fired}',
-            f'Alien ships hit: {self.player.aliens_hit}',
-            f'Accuracy: {self.player.get_accuracy()} %'
-        ]
-        start_y = self.setup['screen_height'] // 3
-        line_spacing = 30
-
-        self.SCREEN.fill(self.BLACK)
-        for i, line in enumerate(game_over_text):
-            text = self.SCORE_FONT.render(line, True, self.WHITE)
-            text_rect = text.get_rect(center=(self.setup['screen_width'] // 2, start_y + i * line_spacing))
-            self.SCREEN.blit(text, text_rect)
-
-        pygame.display.flip()
-
-
     def check_game_over(self):
         if self.game_over and not self.level_completed:
-            self.game_over_screen()
-            # self.total_score = int(self.total_score + self.level_score + (10000 * (self.player_accuracy / 100)))
-            # self.calculate_score = False
-
-        # if self.game_over and self.game_over_time + 5000 > pygame.time.get_ticks():
-        #     finalscore_surface = self.SCORE_FONT.render(f'Final Score: {self.total_score}', True, self.WHITE)
-        #     finalscore_rectangle = finalscore_surface.get_rect(center = (self.setup['screen_width'] / 2, self.setup['screen_height'] / 2))
-        #     self.SCREEN.fill(self.BLACK)
-        #     self.SCREEN.blit(finalscore_surface, finalscore_rectangle)
-
-        # if self.active_game and self.level_completed:
-        #     self.all_sprites.remove()
-
-        # elif self.game_over and self.game_over_time + 5000 < pygame.time.get_ticks():
-        #     self.active_game = False
-        #     self.game_over = False
-        #     self.lasers_fired = 0
-        #     self.enemies_hit = 0
-        #     self.player_accuracy = 0
-        #     self.level_score = 0
-        #     self.total_score = 0
+            self.interface.show_game_over(self.level, self.player)
 
 
     def run(self):

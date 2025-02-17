@@ -7,20 +7,29 @@ Property of Seth Hobbes, member of Monarch Technologies, all rights reserved
 Image assets credit to: https://github.com/exewin https://exewin.github.io/
 '''
 import pygame
-from .. import aliens, player, utils
+from .. import ai, aliens, player, utils
 
 
-def create_starship(projectile_group: pygame.sprite.Group):
+def create_starship(projectile_group: pygame.sprite.Group, game):
     '''
     Create a player starship.
     '''
     setup = utils.helpers.get_metadata('setup.yaml')
 
-    player_ship = player.player_starship.PlayerStarship(
-        x=(setup['screen_width'] / 2),
-        y=(setup['screen_height'] / 8 * 7.5),
-        projectile_group=projectile_group
-    )
+    if game is not None:
+        player_ship = ai.player_bot.Bot(
+            x=(setup['screen_width'] / 2),
+            y=(setup['screen_height'] / 8 * 7.5),
+            projectile_group=projectile_group,
+            game=game
+        )
+
+    else:
+        player_ship = player.player_starship.PlayerStarship(
+            x=(setup['screen_width'] / 2),
+            y=(setup['screen_height'] / 8 * 7.5),
+            projectile_group=projectile_group
+        )
 
     return player_ship
 

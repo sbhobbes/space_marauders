@@ -23,6 +23,10 @@ class Screen():
         self.button_font_color = (255, 0, 0)
         self.button_color = (0, 255, 0)
         self.title_color = (255, 165, 0)
+        self.BLACK = (0, 0, 0)
+        self.WHITE = (255, 255, 255)
+        self.ORIGIN = (0, 0)
+        self.SCORE_FONT = pygame.font.Font(self.setup['font_name'], 20)
 
 
     def get_screen(self):
@@ -45,6 +49,14 @@ class Screen():
             background=True,
             background_color=self.button_color
         )
+        _, demo_mode_rectangle = self.create_text_box(
+            font=self.button_font,
+            text='Demo Mode',
+            font_color=self.button_font_color,
+            rectangle_center=(self.setup['screen_width'] / 2, self.setup['screen_height'] / 5 * 3),
+            background=True,
+            background_color=self.button_color
+        )
         self.create_text_box(
             font=self.title_font,
             text='Space Marauders',
@@ -52,7 +64,7 @@ class Screen():
             rectangle_center=(self.setup['screen_width'] / 2, self.setup['screen_height'] / 6)
         )
 
-        return new_game_rectangle
+        return new_game_rectangle, demo_mode_rectangle
 
 
     def create_text_box(
@@ -69,14 +81,16 @@ class Screen():
         Create a pygame text box.
         '''
         surface = font.render(text, True, font_color)
-        rectangle = surface.get_rect(center = rectangle_center)
+        rectangle = surface.get_rect(center=rectangle_center)
 
         if background:
             surface_width = surface.get_width()
             surface_height = surface.get_height()
             surface_dimensions = (surface_width + background_padding, surface_height + background_padding)
             background_surface = pygame.Surface(surface_dimensions)
-            background_rectangle = surface.get_rect(center = ((self.setup['screen_width'] / 2), (self.setup['screen_height'] / 2)))
+            # background_rectangle = surface.get_rect(center = ((self.setup['screen_width'] / 2), (self.setup['screen_height'] / 2)))
+            # background_rectangle = surface.get_rect(center=rectangle_center)
+            background_rectangle = rectangle.copy()
             background_surface.fill(background_color)
             self.screen.blit(background_surface, background_rectangle)
             self.screen.blit(surface, rectangle)
@@ -93,7 +107,7 @@ class Screen():
 
     def refresh_screen(self):
         self.screen.fill((180, 180, 180))
-        self.blit(self.background, (0, 0))
+        self.blit(self.background, self.ORIGIN)
 
 
     def display_score(self):
@@ -101,3 +115,52 @@ class Screen():
         Display the scoreboard.
         '''
         pass
+
+
+    def show_level_complete(self, player, level):
+        splash_text =[
+            f'Level {level} completed!',
+            f'Level score: {player.get_current_score()}',
+            f'Total score: {player.get_current_score()}',
+            f'Shots fired: {player.shots_fired}',
+            f'Alien ships hit: {player.aliens_hit}',
+            f'Accuracy: {player.get_accuracy()} %'
+        ]
+        start_y = self.setup['screen_height'] // 3
+        line_spacing = 30
+
+        self.screen.fill(self.BLACK)
+        for i, line in enumerate(splash_text):
+            text = self.SCORE_FONT.render(line, True, self.WHITE)
+            text_rect = text.get_rect(center=(self.setup['screen_width'] // 2, start_y + i * line_spacing))
+            self.screen.blit(text, text_rect)
+
+        pygame.display.flip()
+
+        pygame.time.delay(2000)
+
+        level += 1
+
+        return level
+
+
+    def show_game_over(self, level, player):
+        game_over_text = [
+            'Game Over!',
+            f'Highest level completed: {level - 1}',
+            f'Level score: {player.get_current_score()}',
+            f'Final score: {player.get_current_score()}',
+            f'Shots fired: {player.shots_fired}',
+            f'Alien ships hit: {player.aliens_hit}',
+            f'Accuracy: {player.get_accuracy()} %'
+        ]
+        start_y = self.setup['screen_height'] // 3
+        line_spacing = 30
+
+        self.screen.fill(self.BLACK)
+        for i, line in enumerate(game_over_text):
+            text = self.SCORE_FONT.render(line, True, self.WHITE)
+            text_rect = text.get_rect(center=(self.setup['screen_width'] // 2, start_y + i * line_spacing))
+            self.screen.blit(text, text_rect)
+
+        pygame.display.flip()
