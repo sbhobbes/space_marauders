@@ -62,20 +62,14 @@ def clear_all_groups(groups):
 
 
 # Check for quit event
-def check_for_quit():
+def check_for_quit(event):
     """check user inputs to see if the game should continue or terminate"""
-
-    # Loop through all events of type QUIT
-    for event in pygame.event.get(pygame.QUIT):
+    if event.type == pygame.QUIT:
         # If QUIT event found, call terminate function
         terminate()
 
-    # Loop through keyup events to check for Esc key input
-    for event in pygame.event.get(pygame.KEYUP):
-
-        # if key up is the Esc key then call terminate function to exit game
-        if event.key == pygame.K_ESCAPE:
-            terminate()
+    if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
+        terminate()
 
 
 # Quit function

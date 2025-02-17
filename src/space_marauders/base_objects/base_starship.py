@@ -9,7 +9,6 @@ Date: 1/20/2022
 Property of Seth Hobbes, member of Monarch Technologies, all rights reserved
 Image assets credit to: https://github.com/exewin https://exewin.github.io/
 '''
-
 import pygame
 from space_marauders.utils.helpers import load_asset, get_metadata
 from space_marauders.objects.projectile import Projectile
@@ -21,21 +20,18 @@ class BaseStarship(pygame.sprite.Sprite):
     '''
     def __init__(self, x, y, faction, **kwargs):
         super().__init__()
-        setup = get_metadata('setup.yaml')[faction]
-        self.image = load_asset(setup['ship_image_path'], base_path='ships')
+        self.setup = get_metadata('setup.yaml')
+        self.starting_x = x
+        self.image = load_asset(self.setup[faction]['ship_image_path'], base_path='ships')
         self.image = pygame.transform.scale(self.image, (50, 50))
         self.image = self.brighten_image(self.image, 50)
         self.image = self.add_outline(self.image, (80, 80, 80), 1)
         self.rect = self.image.get_rect(center=(x, y))
 
-        self.speed = setup['ship_speed']
+        self.speed = self.setup[faction]['ship_speed']
         self.faction = faction
         self.global_projectiles = kwargs.get('projectile_group', None)
         self.projectiles = pygame.sprite.Group()
-
-
-    # def update(self):
-    #     self.projectiles.update()
 
 
     def fire(self):
@@ -71,3 +67,7 @@ class BaseStarship(pygame.sprite.Sprite):
             pygame.draw.circle(outlined_image, color, point, thickness)
 
         return outlined_image
+
+
+    def reset_position(self):
+        self.rect.centerx = self.starting_x

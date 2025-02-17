@@ -17,6 +17,7 @@ class Projectile(pygame.sprite.Sprite):
         setup = get_metadata('setup.yaml')
         self.screen_height = setup['screen_height']
         self.image = load_asset(setup[faction]['projectile_image_path'], base_path='projectiles')
+        self.image = pygame.transform.scale(self.image, (setup[faction]['projectile_width'], setup[faction]['projectile_length']))
         self.rect = self.image.get_rect(center=(x, y))
         self.speed = setup[faction]['projectile_speed']
         self.faction = faction

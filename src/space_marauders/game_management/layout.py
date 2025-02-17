@@ -35,7 +35,7 @@ class Screen():
         or when the escape key is pressed; however, the escape key would pull up the main menu
         in a pause game state.
         '''
-        self.screen.fill((180, 180, 180))
+        # self.screen.fill((180, 180, 180))
         self.screen.blit(self.background, (0, 0))
         _, new_game_rectangle = self.create_text_box(
             font=self.button_font,

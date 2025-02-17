@@ -20,8 +20,6 @@ def create_starship(projectile_group: pygame.sprite.Group):
         x=(setup['screen_width'] / 2),
         y=(setup['screen_height'] / 8 * 7.5),
         projectile_group=projectile_group
-        # image_path='sky_blanc_2.png',
-        # speed=5
     )
 
     return player_ship
@@ -42,8 +40,6 @@ def create_enemies(
             x=100 + i * 100,
             y=50,
             projectile_group=projectile_group
-            # image_path='moroder_2.png',
-            # speed=1
         )
         alien_group.add(alien)
 
