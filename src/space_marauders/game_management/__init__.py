@@ -1,1 +1,1 @@
-from . import deploy, layout, runtime
+from . import deploy, layout, linear_algebra, runtime
