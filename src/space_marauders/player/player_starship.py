@@ -47,11 +47,11 @@ class PlayerStarship(BaseStarship):
             self.shooting = False
 
 
-    def update(self):
+    def update(self, delta_time):
         super().update()
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT] and self.rect.left > 0:
-            self.rect.x -= self.speed
+            self.rect.x -= self.speed * delta_time
 
         if keys[pygame.K_RIGHT] and self.rect.right < self.setup['screen_width']:
-            self.rect.x += self.speed
+            self.rect.x += self.speed * delta_time

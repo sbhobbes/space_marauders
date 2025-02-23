@@ -18,7 +18,7 @@ class AlienStarship(base_objects.base_starship.BaseStarship):
         self.fire_timer = pygame.time.get_ticks() + np.random.randint(0, 2000)
 
 
-    def update(self):
+    def update(self, **kwargs):
         super().update()
 
         current_time = pygame.time.get_ticks()

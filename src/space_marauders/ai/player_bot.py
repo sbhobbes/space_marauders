@@ -1,7 +1,8 @@
 import numpy as np
+from space_marauders.utils import helpers
 from space_marauders.player.player_starship import PlayerStarship
 from space_marauders.game_management.linear_algebra import PositionMatrix, VelocityMatrix, DifferenceMatrix, DistanceMatrix
-
+import pygame
 
 class Bot(PlayerStarship):
     def __init__(self, x, y, game, **kwargs):
@@ -12,10 +13,12 @@ class Bot(PlayerStarship):
         self.move_cooldown = 60
         self.position_vector = np.array([[self.rect.centerx, self.rect.top]])
         self.laser_velocity = np.array([-1, self.game.setup['player']['projectile_speed']])
+        setup = helpers.get_metadata('setup.yaml')
+        self.average_delta_time = 1 / setup['fps']
         # self.reaction_time = int(0.2 * self.setup['fps'])
 
 
-    def update(self):
+    def update(self, **kwargs):
         # Get position and velocity vectors of all objects
         positions_list = []
         velocity_list = []
@@ -32,13 +35,18 @@ class Bot(PlayerStarship):
         alien_velocity_matrix = VelocityMatrix(velocity_list)
 
         positions_list = []
+        velocity_list = []
         for bomb in self.game.alien_projectiles_group:
             x = bomb.rect.centerx
             y = bomb.rect.bottom
+            speed = self.game.alien_projectiles_group.sprites()[-1].speed
+            direction = -1 if speed < 0 else 1
 
             positions_list.append(np.array([x, y]))
+            velocity_list.append(np.array([direction, speed]))
 
         bomb_positions_matrix = PositionMatrix(positions_list)
+        bomb_velocity_matrix = VelocityMatrix(velocity_list)
 
         # Find distance to nearest alien
         bot_position_times_aliens = PositionMatrix((self.position_vector.transpose() * np.array([1] * alien_positions_matrix.shape[0])).transpose())
@@ -60,108 +68,25 @@ class Bot(PlayerStarship):
 
         # Calculate target change in x during that same time
         distance_alien_will_travel_x = time_to_target_y * alien_velocity_matrix[-1, 1]
-        print(distance_alien_will_travel_x)
-        
+
         # Calculate bot's target x position and time, ensuring that bot arrives in time and fires laser
+        target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0])
+
         # Also ensure that any bomb in the path which would hit the bot is avoided
-        pass
+        if bomb_positions_matrix.shape[0] > 0:
+            bomb_distance_to_target_matrix = self.rect.top - bomb_positions_matrix[:, 1]
+            bomb_time_to_target_matrix = bomb_distance_to_target_matrix / bomb_velocity_matrix[-1, 1]
+            print(bomb_positions_matrix[:, 0])
+        
+        # Move bot
+        if self.rect.centerx < target_firing_position - 5:
+            self.rect.x += self.speed * self.average_delta_time
 
+        elif self.rect.centerx > target_firing_position + 5:
+            self.rect.x -= self.speed * self.average_delta_time
 
-        # if self.game.alien_projectiles_group and self.move_timer == 0:
-        #     closest_bomb = min(
-        #         self.game.alien_projectiles_group,
-        #         key=lambda bomb: abs(bomb.rect.centerx - self.rect.centerx),
-        #         default=None
-        #     )
-        #     if closest_bomb:
-        #         self.move_timer = 0 # Not sure about this one
-        #         self.avoid_projectile(closest_bomb)
-
-        # elif self.move_timer > 0:
-        #     self.move_timer -= 1
-        # if self.game.alien_projectiles_group:
-        #     for bomb in self.game.alien_projectiles_group:
-        #         if (
-        #             bomb.rect.left - 20 <= self.rect.right and
-        #             bomb.rect.left + 20 >= self.rect.left and
-        #             bomb.rect.left > self.rect.centerx and
-        #             self.rect.left > 0
-        #         ):
-        #             self.move_left()
-
-        #         elif (
-        #             bomb.rect.right + 20 >= self.rect.left and
-        #             bomb.rect.right - 20 <= self.rect.right and
-        #             bomb.rect.right < self.rect.centerx and
-        #             self.rect.right < self.setup['screen_width']
-        #         ):
-        #             self.move_right()
-
-
-    # def avoid_projectile(self, bomb):
-    #     screen_width = self.setup['screen_width']
-    #     buffer = 30
-
-    #     if self.current_direction:
-    #         if self.current_direction == 'left' and self.rect.left <= buffer:
-    #             self.current_direction = 'right'
-    #         elif self.current_direction == 'right' and self.rect.right >= screen_width - buffer:
-    #             self.current_direction = 'left'
-
-    #     if bomb.rect.left - 15 < self.rect.right and bomb.rect.centerx > self.rect.centerx:
-    #         if self.current_direction != 'left' and self.rect.left > buffer:
-    #             self.current_direction = 'left'
-    #             self.move_timer = self.move_cooldown
-
-    #     elif bomb.rect.right + 15 > self.rect.left and bomb.rect.centerx < self.rect.centerx:
-    #         if self.current_direction != 'right' and self.rect.right < screen_width - buffer:
-    #             self.current_direction = 'right'
-    #             self.move_timer = self.move_cooldown
-
-    #     if self.current_direction == 'left':
-    #         self.move_left()
-
-    #     elif self.current_direction == 'right':
-    #         self.move_right()
-
-
-    # def update(self):
-    #     if not self.game.alien_projectiles_group:
-    #         return
-
-    #     if self.move_timer > 0:
-    #         self.move_timer -= 1
-    #     else:
-    #         self.decide_movement()
-    #         self.move_timer = self.reaction_time  # Reset cooldown
-
-    #     # Keep moving in the chosen direction every frame
-    #     if self.current_direction == "left":
-    #         self.move_left()
-    #     elif self.current_direction == "right":
-    #         self.move_right()
-
-    # def decide_movement(self):
-    #     screen_width = self.game.setup['screen_width']
-    #     buffer = 30  
-
-    #     # Find the closest bomb
-    #     closest_bomb = min(
-    #         self.game.alien_projectiles_group,
-    #         key=lambda bomb: abs(bomb.rect.centerx - self.rect.centerx),
-    #         default=None
-    #     )
-
-    #     if closest_bomb:
-    #         # Move left if the bomb is coming from the right
-    #         if closest_bomb.rect.left < self.rect.right and closest_bomb.rect.centerx > self.rect.centerx:
-    #             if self.rect.left > buffer:
-    #                 self.current_direction = "left"
-
-    #         # Move right if the bomb is coming from the left
-    #         elif closest_bomb.rect.right > self.rect.left and closest_bomb.rect.centerx < self.rect.centerx:
-    #             if self.rect.right < screen_width - buffer:
-    #                 self.current_direction = "right"
+        elif len(self.projectiles) < 1:
+            self.fire()
 
 
     def move_left(self):

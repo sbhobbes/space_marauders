@@ -23,12 +23,12 @@ class Projectile(pygame.sprite.Sprite):
         self.faction = faction
 
 
-    def update(self):
+    def update(self, delta_time):
         if self.faction == 'player':
-            self.rect.y -= self.speed
+            self.rect.y -= self.speed * delta_time
 
         else:
-            self.rect.y += self.speed
+            self.rect.y += self.speed * delta_time
 
         if self.rect.y < 0 or self.rect.y > self.screen_height:
             self.kill()

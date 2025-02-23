@@ -15,15 +15,17 @@ class Game():
         pygame.init()
         pygame.font.init()
 
+        self.delta_time = 0
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
         self.level = 1
-        self.alien_speed = 1
-        self.alien_drop_amount = 20
+        # self.alien_speed = 1
+        self.alien_drop_amount = 400
         self.game_over = False
         self.level_completed = False
         self.calculate_score = False
         self.setup = utils.helpers.get_metadata('setup.yaml')
+        self.alien_speed = self.setup['alien']['ship_speed']
         self.fps_clock = pygame.time.Clock()
         self.active_game = False
         self.demo_mode = False
@@ -69,7 +71,7 @@ class Game():
                 self.all_sprites.add(self.player)
 
             for alien in self.aliens:
-                alien.rect.x += self.alien_speed
+                alien.rect.x += self.alien_speed * self.delta_time
 
             group_rect = self.aliens.sprites()[0].rect.copy()
             for alien in self.aliens:
@@ -78,7 +80,7 @@ class Game():
             if group_rect.left < 0 or group_rect.right > self.setup['screen_width']:
                 self.alien_speed *= -1
                 for alien in self.aliens:
-                    alien.rect.y += self.alien_drop_amount
+                    alien.rect.y += self.alien_drop_amount * self.delta_time
 
             self.check_collisions()
             self.repaint_screen()
@@ -110,7 +112,7 @@ class Game():
         self.interface.refresh_screen()
         self.player.projectiles.draw(self.interface)
         self.all_sprites.draw(self.interface)
-        self.all_sprites.update()
+        self.all_sprites.update(delta_time=self.delta_time)
 
 
     def update_score(self):
@@ -150,7 +152,8 @@ class Game():
         run_game = True
 
         while run_game is True:
+            self.delta_time = self.fps_clock.tick(self.setup['fps']) / 1000
             self.check_events()
             self.check_game_state()
             pygame.display.flip()
-            self.fps_clock.tick(self.setup['fps'])
+            # self.fps_clock.tick(self.setup['fps'])

@@ -7,19 +7,19 @@ background_image: 'background_space.png'
 player:
   size: 50
   fire_rate: 5000
-  ship_speed: 5
+  ship_speed: 300
   ship_image_path: sky_blanc_2.png
   projectile_image_path: 'laser_03.png'
   projectile_width: 5
   projectile_length: 25
-  projectile_speed: 10
+  projectile_speed: 750
 
 alien:
   size: 50
   fire_rate: 5000
-  ship_speed: 1
+  ship_speed: 70
   ship_image_path: moroder_2.png
   projectile_image_path: machine_gun_03.png
   projectile_width: 15
   projectile_length: 15
-  projectile_speed: 4
+  projectile_speed: 200
