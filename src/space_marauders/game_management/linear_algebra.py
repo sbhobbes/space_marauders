@@ -72,13 +72,22 @@ class Matrix:
         stacked_data = np.vstack((self.data, other.data))
 
         # Handle row names:
-        new_row_names = list(self.row_mapping.keys()) + list(other.row_mapping.keys())  # Combine row names
+        new_row_names = list(self.row_mapping.keys()) + list(other.row_mapping.keys())
         # Ensure unique row names if needed (add logic here if duplicates are a problem)
 
         # Use combined row names or generate defaults if necessary
         stacked_matrix = Matrix(stacked_data, row_names=new_row_names, column_names=self.column_mapping.keys())
 
         return stacked_matrix
+
+
+    def add_row_vector(self, row_vector, **kwargs):
+        row_name = kwargs.get('row_name', f'row_{self.data.shape[0]}')
+        row_vector = np.array(row_vector).reshape(1, -1)
+        new_matrix = self.row_stack(Matrix(row_vector, row_names=[row_name]))
+        self._data = new_matrix.data
+        self.row_mapping = new_matrix.row_mapping
+        self.column_mapping = new_matrix.column_mapping
 
 
     def reshape(self, new_shape):
@@ -162,6 +171,11 @@ class Matrix:
         return self._data
 
 
+    @property
+    def empty(self):
+        return self.data.size == 0
+
+
 class PositionMatrix(Matrix):
     def __init__(self, data, row_names=None):
         row_names = row_names if row_names is not None else [f'row_{i}' for i in range(len(data))]
@@ -204,3 +218,7 @@ class DistanceMatrix(Matrix):
 
     def get_distances(self):
         return np.diagonal(self._data).reshape(-1, 1)
+
+
+    def get_index_of_smallest_distance(self):
+        return np.argmin(self._data)
