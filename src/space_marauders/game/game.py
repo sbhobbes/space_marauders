@@ -107,6 +107,13 @@ class Game():
                 projectile.kill()
                 self.player.update_score(5 * self.level)
 
+            if projectile.rect.bottom < 0:
+                projectile.kill()
+
+        for projectile in self.alien_projectiles_group:
+            if projectile.rect.top > self.setup['screen_height']:
+                projectile.kill()
+
 
     def repaint_screen(self):
         self.interface.refresh_screen()
