@@ -122,16 +122,17 @@ class Bot(PlayerStarship):
                     elif bomb_x - 15 < self.rect.right and bomb_x >= self.rect.centerx - 5:
                         self.rect.x -= self.speed * self.average_delta_time
 
-                    elif self.rect.centerx < target_firing_position - 5:
-                        self.rect.x += self.speed * self.average_delta_time
+                    else:
+                        self.move_and_fire(target_firing_position)
 
-                    elif self.rect.centerx > target_firing_position + 5:
-                        self.rect.x -= self.speed * self.average_delta_time
+            else:
+                self.move_and_fire(target_firing_position)
 
-                    elif len(self.projectiles) < 1:
-                        self.fire()
+        else:
+            self.move_and_fire(target_firing_position)
 
-        # Move bot
+
+    def move_and_fire(self, target_firing_position):
         if self.rect.centerx < target_firing_position - 5:
             self.rect.x += self.speed * self.average_delta_time
 
