@@ -218,7 +218,7 @@ class DistanceMatrix(Matrix):
 
 
     def get_distances(self):
-        return np.diagonal(self._data).reshape(-1, 1)
+        return np.diagonal(self._data)#.reshape(-1, 1)
 
 
     def get_index_of_smallest_distance(self):
