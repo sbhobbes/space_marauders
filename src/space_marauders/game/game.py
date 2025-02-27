@@ -95,6 +95,7 @@ class Game():
 
     def check_collisions(self):
         if pygame.sprite.spritecollide(self.player, self.alien_projectiles_group, True):
+            self.player.kill()
             self.game_over = True
 
         for projectile in self.player_projectiles_group:

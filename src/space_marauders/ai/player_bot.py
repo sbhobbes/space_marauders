@@ -58,10 +58,10 @@ class Bot(PlayerStarship):
         nearest_alien_position = alien_positions_matrix[nearest_alien_index, :]
 
         # Find distance to all bombs - may not be necessary
-        # if not bomb_positions_matrix.empty:
-        #     bot_position_times_bombs = PositionMatrix((self.position_vector.transpose() * np.array([1] * bomb_positions_matrix.shape[0])).transpose())
-        #     bot_to_bombs_difference = DifferenceMatrix(bomb_positions_matrix, bot_position_times_bombs)
-        #     bot_to_bombs_distance = DistanceMatrix(bot_to_bombs_difference).get_distances()
+        if not bomb_positions_matrix.empty:
+            bot_position_times_bombs = PositionMatrix((self.position_vector.transpose() * np.array([1] * bomb_positions_matrix.shape[0])).transpose())
+            bot_to_bombs_difference = DifferenceMatrix(bomb_positions_matrix, bot_position_times_bombs)
+            bot_to_bombs_distance = DistanceMatrix(bot_to_bombs_difference).get_distances()
 
         # Calculate laser time to target based on change in y
         y_target = alien_positions_matrix[-1, 1]
@@ -80,7 +80,7 @@ class Bot(PlayerStarship):
             if outer_alien_x <= distance_alien_will_travel_x:
                 # Aliens are moving to the left, but will switch and come back to the right
                 distance_alien_will_travel_x = distance_alien_will_travel_x - (self.setup['screen_width'] - outer_alien_x)
-                target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0] * -1)
+                target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0] * -1) + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0])
 
         elif alien_velocity_matrix[0, 0] > 0:
             # Relevant outer-most alien is on the right-hand side, or the last position in the matrix
@@ -92,7 +92,7 @@ class Bot(PlayerStarship):
                 # print('Next')
                 # print('total travel distance', distance_alien_will_travel_x)
                 distance_alien_will_travel_x = distance_alien_will_travel_x - (self.setup['screen_width'] - outer_alien_x)
-                target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0] * -1)
+                target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0] * -1) + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0] * -1)
                 # print('distance to edge of screen', self.setup['screen_width'] - outer_alien_x + (self.setup['alien']['size'] // 2))
                 # print('remaining travel distance', distance_alien_will_travel_x)
                 # print('distance from target to alien', (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0] * -1))
@@ -102,31 +102,59 @@ class Bot(PlayerStarship):
 
         if not target_firing_position:
             # Calculate bot's target x position and time, ensuring that bot arrives in time and fires laser
-            target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0])
+            target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0]) + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0])
 
         # Also ensure that any bomb in the path which would hit the bot is avoided
         if bomb_positions_matrix.shape[0] > 0:
-            bomb_distance_to_target_matrix = self.rect.centery - bomb_positions_matrix[:, 1]
-            bomb_time_to_target_matrix = bomb_distance_to_target_matrix / bomb_velocity_matrix[-1, 1]
-            # print(bomb_positions_matrix[:, 0])
-            bot_distance_from_bombs_matrix = self.rect.centerx - bomb_positions_matrix[:, 1]
-            bot_time_to_bombs_matrix = bot_distance_from_bombs_matrix / self.speed
-            problem_bombs = np.where(bomb_time_to_target_matrix - 1 <= bot_time_to_bombs_matrix)
-            problem_bomb_positions = bomb_positions_matrix[problem_bombs]
+            # bomb_distance_to_target_matrix = self.rect.top - bomb_positions_matrix[:, 1]
+            # bomb_time_to_target_matrix = bomb_distance_to_target_matrix / bomb_velocity_matrix[-1, 1]
+            # print('Bomb x positions', bomb_positions_matrix[:, 0])
+            # bot_distance_from_bombs_matrix = abs(self.rect.centerx - bomb_positions_matrix[:, 0])
+            # bot_time_to_bombs_matrix = bot_distance_from_bombs_matrix / self.speed
+            # print(bot_time_to_bombs_matrix)
+            # problem_bombs = np.where(bomb_time_to_target_matrix - 1 <= bot_time_to_bombs_matrix)
+            # problem_bomb_positions = bomb_positions_matrix[problem_bombs]
+            # print(problem_bomb_positions)
+            problem_bombs = np.where(bot_to_bombs_distance[:, 0] <= 110)
+            print('Bomb distances:', bot_to_bombs_distance[:, 0])
+            print('Problem bombs:', problem_bombs)
 
-            if len(problem_bomb_positions) > 1:
-                for bomb_x, _ in problem_bomb_positions:
-                    if bomb_x + 15 > self.rect.left and bomb_x + 15 <= self.rect.centerx + 5:
-                        self.rect.x += self.speed * self.average_delta_time
-
-                    elif bomb_x - 15 < self.rect.right and bomb_x >= self.rect.centerx - 5:
-                        self.rect.x -= self.speed * self.average_delta_time
-
-                    else:
-                        self.move_and_fire(target_firing_position)
+            # if len(problem_bomb_positions) > 1:
+            # print(len(problem_bombs[0]))
+            if len(problem_bombs[0]) > 0:
+                # nearest_bomb = np.argmin(bot_distance_from_bombs_matrix)
+                nearest_bomb = np.argmin(problem_bombs)
+                nearest_bomb_position = bomb_positions_matrix[nearest_bomb, :]
+                bomb_x = nearest_bomb_position[0]
+                print('Bomb X:', bomb_x)
+                print('Starship X:', self.rect.centerx)
+                if bomb_x + 15 > self.rect.left and bomb_x <= self.rect.centerx - 5:
+                    self.rect.x += self.speed * self.average_delta_time
+                elif bomb_x - 15 < self.rect.right and bomb_x >= self.rect.centerx + 5:
+                    self.rect.x -= self.speed * self.average_delta_time
+                else:
+                    self.move_and_fire(target_firing_position)
 
             else:
                 self.move_and_fire(target_firing_position)
+
+            # if len(problem_bomb_positions) > 1:
+                # i = 0
+                # for bomb_x, _ in problem_bomb_positions:
+                #     if i < 1:
+                #         if bomb_x + 15 > self.rect.left and bomb_x + 15 <= self.rect.centerx + 5:
+                #             self.rect.x += self.speed * self.average_delta_time
+
+                #         elif bomb_x - 15 < self.rect.right and bomb_x >= self.rect.centerx - 5:
+                #             self.rect.x -= self.speed * self.average_delta_time
+
+                #         else:
+                #             self.move_and_fire(target_firing_position)
+
+                #     i += 1
+
+            # else:
+            #     self.move_and_fire(target_firing_position)
 
         else:
             self.move_and_fire(target_firing_position)

@@ -20,6 +20,7 @@ class Matrix:
 
     def calculate_distance(self):
         return Matrix(np.sqrt(self.data @ self.data.transpose()))
+        # return Matrix(np.linalg.norm(self.data, axis=0).reshape(-1, 1))
 
 
     def get_column_vector(self, column):
