@@ -16,6 +16,9 @@ class Bot(PlayerStarship):
         self.setup = helpers.get_metadata('setup.yaml')
         self.average_delta_time = 1 / self.setup['fps']
         # self.reaction_time = int(0.2 * self.setup['fps'])
+        self.current_score = 0
+        self.shots_fired = 0
+        self.aliens_hit = 0
 
 
     def update(self, **kwargs):
@@ -49,7 +52,6 @@ class Bot(PlayerStarship):
             velocity_list.append(np.array([direction, speed]))
 
         bomb_positions_matrix = PositionMatrix(positions_list)
-        # bomb_velocity_matrix = VelocityMatrix(velocity_list)
 
         # Find distance to nearest alien
         bot_position_times_aliens = PositionMatrix((self.position_vector.transpose() * np.array([1] * alien_positions_matrix.shape[0])).transpose())
@@ -57,13 +59,6 @@ class Bot(PlayerStarship):
         bot_to_aliens_distance = DistanceMatrix(bot_to_aliens_difference).get_distances()
         nearest_alien_index = np.argmin(bot_to_aliens_distance)
         nearest_alien_position = alien_positions_matrix[nearest_alien_index, :]
-        print('--' * 100)
-        # print('Bot position:', bot_position_times_aliens)
-        # print('Alien positions:', alien_positions_matrix)
-        # print('Bot difference from aliens:', bot_to_aliens_difference)
-        # print('Bot distance to aliens:', bot_to_aliens_distance)
-        # print('Nearest alien index:', nearest_alien_index)
-        # print('Nearest alien position:', alien_positions_matrix[nearest_alien_index, :])
 
         # Find distance to all bombs - may not be necessary
         if not bomb_positions_matrix.empty:
@@ -75,9 +70,6 @@ class Bot(PlayerStarship):
         y_target = alien_positions_matrix[-1, 1]
         y_distance = self.position_vector[0, 1] - y_target
         time_to_target_y = y_distance / self.laser_velocity[1]
-        # print('Y target:', y_target)
-        # print('Y distance:', y_distance)
-        # print('Y time to target:', time_to_target_y)
 
         # Calculate target change in x during that same time
         distance_alien_will_travel_x = time_to_target_y * alien_velocity_matrix[-1, 1]
@@ -88,115 +80,60 @@ class Bot(PlayerStarship):
         alien_origin = nearest_alien_position[0]
         bot_origin = self.position_vector[0, 0]# + distance_alien_will_travel_x
         relative_rate = bot_rate - alien_rate
-        relative_distance = abs((bot_origin - alien_origin) * alien_velocity_matrix[-1, 0]) + distance_alien_will_travel_x# + (alien_rate * self.average_delta_time * time_to_target_y)
-        # time_to_meet = relative_distance / relative_rate
-        # meeting_point = alien_origin + (alien_rate * time_to_meet)# * alien_velocity_matrix[-1, 0]
-        # distance = alien_rate * ((abs(bot_origin - alien_origin) + abs(distance_alien_will_travel_x)) / abs(alien_rate - bot_rate))
-        # alien_travel_distance = alien_rate * ((bot_origin - alien_origin) / (alien_rate - bot_rate))
-        # bot_travel_distance = alien_travel_distance + alien_origin + (distance_alien_will_travel_x)
-        # alien_travel_distance = relative_distance + distance_alien_will_travel_x
-        # bot_travel_distance = abs(meeting_point - bot_origin)
-        # alien_travel_distance = abs(meeting_point - alien_origin)
-        # print('Alien rate:', alien_rate)
-        # print('Bot rate:', bot_rate)
+        relative_distance = abs(bot_origin - alien_origin) + distance_alien_will_travel_x# + (alien_rate * self.average_delta_time * time_to_target_y)
+
         if alien_velocity_matrix[0, 0] > 0:# + distance_alien_will_travel_x:
             if bot_origin > alien_origin:
-                # alien_travel_distance = alien_rate * (relative_distance / relative_rate)
-                print('Condition one')
                 alien_travel_distance = distance_alien_will_travel_x
                 bot_travel_distance = alien_travel_distance + relative_distance + distance_alien_will_travel_x
                 meeting_point = alien_origin + alien_travel_distance
 
             elif bot_origin < alien_origin:# - distance_alien_will_travel_x:
-                print('Condition two')
                 alien_travel_distance = alien_rate * (relative_distance / relative_rate)
                 bot_travel_distance = alien_travel_distance + relative_distance + distance_alien_will_travel_x
                 meeting_point = alien_origin + distance_alien_will_travel_x
 
             else:
-                print('First else condition')
                 alien_travel_distance = distance_alien_will_travel_x
                 bot_travel_distance = distance_alien_will_travel_x
                 meeting_point = bot_origin + distance_alien_will_travel_x
 
+            outer_alien_x = alien_positions_matrix[0, 0]
+            if (self.setup['screen_width'] - outer_alien_x) <= alien_travel_distance:
+                target_firing_position = meeting_point - (alien_travel_distance - self.setup['screen_width'] - outer_alien_x)
+
         elif alien_velocity_matrix[0, 0] < 0:
             if bot_origin > alien_origin:
-                print('Condition three')
                 alien_travel_distance = alien_rate * (relative_distance / relative_rate)
                 bot_travel_distance = alien_travel_distance + relative_distance + distance_alien_will_travel_x
                 meeting_point = alien_origin - distance_alien_will_travel_x
 
             elif bot_origin < alien_origin:
-                print('Condition four')
                 alien_travel_distance = distance_alien_will_travel_x
                 bot_travel_distance = alien_travel_distance - relative_distance - distance_alien_will_travel_x
                 meeting_point = alien_origin - alien_travel_distance
 
             else:
-                print('Second else condition')
                 alien_travel_distance = distance_alien_will_travel_x
                 bot_travel_distance = distance_alien_will_travel_x
                 meeting_point = bot_origin - distance_alien_will_travel_x
 
+            outer_alien_x = alien_positions_matrix[0, 0]
+            if outer_alien_x <= alien_travel_distance:
+                target_firing_position = meeting_point + (alien_travel_distance - outer_alien_x)
+
         else:
-            print('Final else condition')
             alien_travel_distance = alien_rate * (relative_distance / relative_rate)
             meeting_point = alien_origin + distance_alien_will_travel_x
             bot_travel_distance = 0
 
-        print('Alien origin:', alien_origin)
-        print('Bot origin:', bot_origin)
-        print('Relative rate:', relative_rate)
-        print('Relative distance:', relative_distance)
-        # print('Time to meet:', time_to_meet)
-        print('Bot travel distance:', bot_travel_distance)
-        print('Alien travel distance:', alien_travel_distance)
-        print('Alien prime:', distance_alien_will_travel_x)
-        print('Meeting point:', meeting_point)
-
-        # Determine current direction of aliens, and get the x position of the outer-most alien
-        # print('Alien velocity:', alien_velocity_matrix[0, :])
-        if alien_velocity_matrix[0, 0] < 0:
-            # Relevant outer-most alien is on the left-hand side, or the first position in the matrix
-            outer_alien_x = alien_positions_matrix[0, 0]
-
-            # Determine if the aliens are going to change directions before the bot could arrive at the target firing position
-            # if outer_alien_x <= distance_alien_will_travel_x:
-            if outer_alien_x <= bot_travel_distance:
-                # Aliens are moving to the left, but will switch and come back to the right
-                # distance_alien_will_travel_x = distance_alien_will_travel_x - (self.setup['screen_width'] - outer_alien_x)
-                # bot_travel_distance = bot_travel_distance - (self.setup['screen_width'] - outer_alien_x)
-                # target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0] * -1) + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0])
-                # target_firing_position = nearest_alien_position[0] + (bot_travel_distance * alien_velocity_matrix[-1, 0] * -1)# + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0])
-                target_firing_position = meeting_point
-
-        elif alien_velocity_matrix[0, 0] > 0:
-            # Relevant outer-most alien is on the right-hand side, or the last position in the matrix
-            outer_alien_x = alien_positions_matrix[-1, 0]
-
-            # Determine if the aliens are going to change directions before the bot could arrive at the target firing position
-            # if (self.setup['screen_width'] - outer_alien_x) <= distance_alien_will_travel_x:
-            if (self.setup['screen_width'] - outer_alien_x) <= bot_travel_distance:
-                # distance_alien_will_travel_x = distance_alien_will_travel_x - (self.setup['screen_width'] - outer_alien_x)
-                # bot_travel_distance = bot_travel_distance - (self.setup['screen_width'] - outer_alien_x)
-                # target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0] * -1) + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0] * -1)
-                # target_firing_position = nearest_alien_position[0] + (bot_travel_distance * alien_velocity_matrix[-1, 0])# + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0])
-                target_firing_position = meeting_point
-
         if not target_firing_position:
             # Calculate bot's target x position and time, ensuring that bot arrives in time and fires laser
-            # target_firing_position = nearest_alien_position[0] + (distance_alien_will_travel_x * alien_velocity_matrix[-1, 0]) + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0])
-            # target_firing_position = bot_origin + (bot_travel_distance * alien_velocity_matrix[-1, 0])# + ((self.setup['alien']['size'] // 2) * alien_velocity_matrix[-1, 0])
             target_firing_position = meeting_point
-
-        # print('Alien travel distance:', distance_alien_will_travel_x)
-        # print('Target firing position:', target_firing_position)
 
         # Also ensure that any bomb in the path which would hit the bot is avoided
         if bomb_positions_matrix.shape[0] > 0:
             problem_bombs = np.where(bot_to_bombs_distance <= 100)
-            # print('Bomb distances:', bot_to_bombs_distance)
-            # print('Problem bombs:', bot_to_bombs_distance[problem_bombs], 'at indices', problem_bombs[0])
 
             if len(problem_bombs[0]) > 0:
                 nearest_problem_index = np.argmin(bot_to_bombs_distance[problem_bombs])
@@ -220,15 +157,16 @@ class Bot(PlayerStarship):
 
 
     def move_and_fire(self, target_firing_position):
-        if self.rect.centerx < target_firing_position - 2:
-            self.rect.x += self.speed * self.average_delta_time
+        if len(self.projectiles) < 1:
+            if self.rect.centerx < target_firing_position - 2:
+                self.rect.x += self.speed * self.average_delta_time
 
-        elif self.rect.centerx > target_firing_position + 2:
-            self.rect.x -= self.speed * self.average_delta_time
+            elif self.rect.centerx > target_firing_position + 2:
+                self.rect.x -= self.speed * self.average_delta_time
 
-        # elif self.rect.centerx == target_firing_position and len(self.projectiles) < 1:
-        elif len(self.projectiles) < 1:
-            self.fire()
+            else:
+                self.fire()
+                self.shots_fired += 1
 
 
     def move_left(self):
@@ -242,3 +180,19 @@ class Bot(PlayerStarship):
     def handle_event(self, *args, **kwargs):
         # Override parent class function and do nothing
         pass
+
+
+    def get_current_score(self):
+        return self.current_score
+
+
+    def update_score(self, amount_to_add):
+        self.current_score += amount_to_add
+
+
+    def update_aliens_hit(self):
+        self.aliens_hit += 1
+
+
+    def get_accuracy(self):
+        return round((self.aliens_hit / self.shots_fired) * 100) if self.shots_fired > 0 else 0

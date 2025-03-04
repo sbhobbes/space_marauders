@@ -8,18 +8,22 @@ player:
   size: 50
   fire_rate: 5000
   ship_speed: 200
+  # ship_speed: 160
   ship_image_path: sky_blanc_2.png
   projectile_image_path: 'laser_03.png'
   projectile_width: 5
   projectile_length: 25
   projectile_speed: 650
+  # projectile_speed: 520
 
 alien:
   size: 50
   fire_rate: 5000
   ship_speed: 50
+  # ship_speed: 40
   ship_image_path: moroder_2.png
   projectile_image_path: machine_gun_03.png
   projectile_width: 15
   projectile_length: 15
   projectile_speed: 150
+  # projectile_speed: 120
