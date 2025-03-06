@@ -15,7 +15,7 @@ from .. import base_objects
 class AlienStarship(base_objects.base_starship.BaseStarship):
     def __init__(self, x, y, **kwargs):
         super().__init__(x, y, 'alien', **kwargs)
-        self.fire_timer = pygame.time.get_ticks() + np.random.randint(0, 2000)
+        self.fire_timer = pygame.time.get_ticks() + np.random.randint(0, 500)
 
 
     def update(self, **kwargs):

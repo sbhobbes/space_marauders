@@ -17,6 +17,7 @@ class PlayerStarship(BaseStarship):
         self.current_score = 0
         self.shots_fired = 0
         self.aliens_hit = 0
+        self.bombs_hit = 0
         self.shooting = False
 
 
@@ -32,8 +33,12 @@ class PlayerStarship(BaseStarship):
         self.aliens_hit += 1
 
 
+    def update_bombs_hit(self):
+        self.bombs_hit += 1
+
+
     def get_accuracy(self):
-        return round((self.aliens_hit / self.shots_fired) * 100) if self.shots_fired > 0 else 0
+        return round(((self.aliens_hit + self.bombs_hit) / self.shots_fired) * 100) if self.shots_fired > 0 else 0
 
 
     def handle_event(self, event):

@@ -124,6 +124,7 @@ class Screen():
             f'Total score: {player.get_current_score()}',
             f'Shots fired: {player.shots_fired}',
             f'Alien ships hit: {player.aliens_hit}',
+            f'Alien bombs hit: {player.bombs_hit}',
             f'Accuracy: {player.get_accuracy()} %'
         ]
         start_y = self.setup['screen_height'] // 3

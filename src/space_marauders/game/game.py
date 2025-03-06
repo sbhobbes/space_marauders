@@ -20,10 +20,11 @@ class Game():
         self.WHITE = (255, 255, 255)
         self.level = 1
         # self.alien_speed = 1
-        self.alien_drop_amount = 400
+        self.alien_drop_amount = 10
         self.game_over = False
         self.level_completed = False
         self.calculate_score = False
+        self.x_accumulator = 0.0
         self.setup = utils.helpers.get_metadata('setup.yaml')
         self.alien_speed = self.setup['alien']['ship_speed']
         self.fps_clock = pygame.time.Clock()
@@ -48,6 +49,7 @@ class Game():
                     self.active_game = True
 
                 elif self.demo_mode_button.collidepoint(pygame.mouse.get_pos()):
+                    self.active_game = True
                     self.demo_mode = True
 
             if self.player is not None:
@@ -55,7 +57,7 @@ class Game():
 
 
     def check_game_state(self):
-        if self.active_game or self.demo_mode:
+        if self.active_game:# or self.demo_mode:
             if not self.aliens:
                 self.aliens = game_management.deploy.create_enemies(object_count=10, projectile_group=self.alien_projectiles_group)
                 self.all_sprites.add(self.aliens)
@@ -70,17 +72,24 @@ class Game():
                 )
                 self.all_sprites.add(self.player)
 
-            for alien in self.aliens:
-                alien.rect.x += self.alien_speed * self.delta_time
+            self.x_accumulator += self.alien_speed * self.delta_time
+            if abs(self.x_accumulator) >= 1.0:
+                pixels_to_move = int(abs(self.x_accumulator))
+                direction = 1 if self.alien_speed > 0 else -1
+
+                for alien in self.aliens:
+                    alien.rect.x += (pixels_to_move * direction)
+
+                self.x_accumulator -= (pixels_to_move * direction)
 
             group_rect = self.aliens.sprites()[0].rect.copy()
             for alien in self.aliens:
                 group_rect.union_ip(alien.rect)
 
-            if group_rect.left < 0 or group_rect.right > self.setup['screen_width']:
+            if (group_rect.left < 5 and self.alien_speed < 0) or (group_rect.right > self.setup['screen_width'] - 5 and self.alien_speed > 0):
                 self.alien_speed *= -1
                 for alien in self.aliens:
-                    alien.rect.y += self.alien_drop_amount * self.delta_time
+                    alien.rect.y += self.alien_drop_amount# * self.delta_time
 
             self.check_collisions()
             self.repaint_screen()
@@ -107,6 +116,7 @@ class Game():
             if pygame.sprite.spritecollide(projectile, self.alien_projectiles_group, True):
                 projectile.kill()
                 self.player.update_score(5 * self.level)
+                self.player.update_bombs_hit()
 
             if projectile.rect.bottom < 0:
                 projectile.kill()
@@ -118,7 +128,6 @@ class Game():
 
     def repaint_screen(self):
         self.interface.refresh_screen()
-        self.player.projectiles.draw(self.interface)
         self.all_sprites.draw(self.interface)
         self.all_sprites.update(delta_time=self.delta_time)
 
@@ -149,6 +158,7 @@ class Game():
         self.all_sprites.add(self.player)
 
         self.active_game = True
+        self.fps_clock.tick()
 
 
     def check_game_over(self):

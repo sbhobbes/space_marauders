@@ -23,7 +23,7 @@ class Projectile(pygame.sprite.Sprite):
         self.faction = faction
 
 
-    def update(self, delta_time):
+    def update(self, delta_time, **kwargs):
         if self.faction == 'player':
             self.rect.y -= self.speed * delta_time
 

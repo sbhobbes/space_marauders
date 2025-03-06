@@ -1,5 +1,5 @@
-screen_width: 1200
-screen_height: 800
+screen_width: 1200.0
+screen_height: 800.0
 fps: 60
 font_name: 'freesansbold.ttf'
 background_image: 'background_space.png'
@@ -7,23 +7,23 @@ background_image: 'background_space.png'
 player:
   size: 50
   fire_rate: 5000
-  ship_speed: 200
-  # ship_speed: 160
+  # ship_speed: 200
+  ship_speed: 100
   ship_image_path: sky_blanc_2.png
   projectile_image_path: 'laser_03.png'
   projectile_width: 5
-  projectile_length: 25
-  projectile_speed: 650
-  # projectile_speed: 520
+  projectile_length: 40
+  # projectile_speed: 650
+  projectile_speed: 325
 
 alien:
   size: 50
   fire_rate: 5000
-  ship_speed: 50
-  # ship_speed: 40
+  # ship_speed: 50
+  ship_speed: 25
   ship_image_path: moroder_2.png
   projectile_image_path: machine_gun_03.png
   projectile_width: 15
   projectile_length: 15
-  projectile_speed: 150
-  # projectile_speed: 120
+  # projectile_speed: 150
+  projectile_speed: 75
