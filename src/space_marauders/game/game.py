@@ -42,18 +42,49 @@ class Game():
 
 
     def check_events(self):
+        hover_color = ()
+        normal_color = ()
+
         for event in pygame.event.get():
             game_management.runtime.check_for_quit(event)
 
             self.interface.check_for_esc(self, event)
 
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.new_game_button.collidepoint(pygame.mouse.get_pos()):
-                    self.active_game = True
+            if hasattr(self, 'new_game_button'):
+                if event.type == pygame.MOUSEMOTION:
+                    if self.new_game_button.collidepoint(event.pos):
+                        if self.interface.new_game_button_state != 'pressed':
+                            self.interface.new_game_button_state = 'hover'
+                            current_color = hover_color
 
-                elif self.demo_mode_button.collidepoint(pygame.mouse.get_pos()):
-                    self.active_game = True
-                    self.demo_mode = True
+                        else:
+                            self.interface.new_game_button_state = 'normal'
+                            new_game_current_color = normal_color
+
+                    elif self.demo_mode_button.collidepoint(event.pos):
+                        if self.interface.demo_mode_button_state != 'pressed':
+                            self.interface.demo_mode_button_state = 'hover'
+
+                        else:
+                            self.interface.demo_mode_button_state = 'normal'
+                            demo_mode_current_color = normal_color
+
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if self.new_game_button.collidepoint(pygame.mouse.get_pos()):
+                        self.interface.new_game_button_state = 'pressed'
+
+                    elif self.demo_mode_button.collidepoint(pygame.mouse.get_pos()):
+                        self.interface.demo_mode_button_state = 'pressed'
+
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if self.new_game_button.collidepoint(event.pos):
+                        self.interface.new_game_button_state = 'normal'
+                        self.active_game = True
+
+                    elif self.demo_mode_button.collidepoint(event.pos):
+                        self.interface.demo_mode_button_state = 'normal'
+                        self.active_game = True
+                        self.demo_mode = True
 
             if self.player is not None:
                 self.player.handle_event(event)

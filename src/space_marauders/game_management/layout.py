@@ -30,6 +30,8 @@ class Screen():
         self.WHITE = (255, 255, 255)
         self.ORIGIN = (0, 0)
         self.SCORE_FONT = pygame.font.Font(self.setup['font_name'], 20)
+        self.new_game_button_state = 'normal'
+        self.demo_mode_button_state = 'normal'
 
 
     def get_screen(self):
@@ -96,28 +98,45 @@ class Screen():
         '''
         Create a pygame text box.
         '''
+        normal_background_color = (50, 100, 150)
+        hover_backround_color = (70, 120, 170)
+        pressed_background_color = (30, 80, 130)
+
         surface = font.render(text, True, font_color)
         rectangle = surface.get_rect(center=rectangle_center)
+        print(self.new_game_button_state)
+        if self.new_game_button_state == 'normal' and background_color is not None:
+            self.draw_gradient_button(surface, rectangle, normal_background_color, font_color, normal_background_color)
 
-        if background:
-            surface_width = surface.get_width()
-            surface_height = surface.get_height()
-            surface_dimensions = (surface_width + background_padding, surface_height + background_padding)
-            background_surface = pygame.Surface(surface_dimensions)
-            # background_rectangle = surface.get_rect(center = ((self.setup['screen_width'] / 2), (self.setup['screen_height'] / 2)))
-            # background_rectangle = surface.get_rect(center=rectangle_center)
-            # background_rectangle = rectangle.inflate(100, 100).copy()
-            background_rectangle = rectangle.copy()
-            background_rectangle.inflate_ip(background_padding, background_padding)
-            background_rectangle.center = rectangle_center
-            background_surface.fill(background_color)
-            self.screen.blit(background_surface, background_rectangle)
-            self.screen.blit(surface, rectangle)
-            return background_surface, background_rectangle
+        elif self.new_game_button_state == 'hover' and background_color is not None:
+            self.draw_gradient_button(surface, rectangle, hover_backround_color, font_color, hover_backround_color)
 
-        else:
-            self.screen.blit(surface, rectangle)
-            return surface, rectangle
+        elif self.new_game_button_state == 'pressed' and background_color is not None:
+            self.draw_gradient_button(surface, rectangle, pressed_background_color, font_color, pressed_background_color)
+
+        self.screen.blit(surface, rectangle)
+        return surface, rectangle
+        
+        # if background:
+        #     surface_width = surface.get_width()
+        #     surface_height = surface.get_height()
+        #     surface_dimensions = (surface_width + background_padding, surface_height + background_padding)
+        #     background_surface = pygame.Surface(surface_dimensions)
+        #     background_rectangle = rectangle.copy()
+        #     self.screen.blit(background_surface, background_rectangle)
+        #     self.screen.blit(surface, rectangle)
+        #     return background_surface, background_rectangle
+
+        # else:
+        #     self.screen.blit(surface, rectangle)
+        #     return surface, rectangle
+
+
+    def draw_gradient_button(self, surface, rect, color1, color2, border_color, border_width=2):
+        pygame.draw.rect(surface, color1, rect)
+        gradient_rect = pygame.Rect(rect.x, rect.y, rect.width, rect.height // 2)
+        pygame.draw.rect(surface, color2, gradient_rect)
+        pygame.draw.rect(surface, border_color, rect, border_width)
 
 
     def blit(self, *args, **kwargs):
