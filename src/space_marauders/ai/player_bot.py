@@ -23,6 +23,7 @@ class Bot(PlayerStarship):
         self.target_firing_position = None
         self.nearest_bomb = None
         self.problem_bombs = None
+        self.nearest_alien_index = None
         self.nearest_alien = None
 
 
@@ -34,14 +35,15 @@ class Bot(PlayerStarship):
             self.target_firing_position = None
             self.nearest_bomb = None
             self.problem_bombs = None
-            self.nearest_alien = None
+            # self.nearest_alien = None
             self.position_vector = np.array([[self.rect.centerx, self.rect.top]])
 
             for alien in self.game.aliens:
                 x = alien.rect.centerx
                 y = alien.rect.bottom
                 direction = -1 if self.game.alien_speed < 0 else 1
-                speed = alien.speed
+                # speed = alien.speed
+                speed = abs(self.game.alien_speed)
 
                 positions_list.append(np.array([x, y]))
                 velocity_list.append(np.array([direction, speed]))
@@ -66,9 +68,15 @@ class Bot(PlayerStarship):
             bot_position_times_aliens = PositionMatrix((self.position_vector.transpose() * np.array([1] * alien_positions_matrix.shape[0])).transpose())
             bot_to_aliens_difference = DifferenceMatrix(alien_positions_matrix, bot_position_times_aliens)
             bot_to_aliens_distance = DistanceMatrix(bot_to_aliens_difference).get_distances()
-            nearest_alien_index = np.argmin(bot_to_aliens_distance)
-            self.nearest_alien = self.game.aliens.sprites()[nearest_alien_index]
-            nearest_alien_position = alien_positions_matrix[nearest_alien_index, :]
+
+            if self.nearest_alien is None:
+                self.nearest_alien_index = np.argmin(bot_to_aliens_distance)
+                self.nearest_alien = self.game.aliens.sprites()[self.nearest_alien_index]
+
+            elif not self.nearest_alien.alive():
+                self.nearest_alien = None
+
+            nearest_alien_position = alien_positions_matrix[self.nearest_alien_index, :]
 
             # Find distance to all bombs - may not be necessary
             if not bomb_positions_matrix.empty:
@@ -182,17 +190,6 @@ class Bot(PlayerStarship):
                         else:
                             self.rect.x += self.speed * self.average_delta_time
 
-                    # nearest_problem_index = np.argmin(bot_to_bombs_distance[self.problem_bombs])
-                    # nearest_bomb_position = bomb_positions_matrix[self.problem_bombs[0][nearest_problem_index], :]
-                    # self.nearest_bomb = self.game.alien_projectiles_group.sprites()[self.problem_bombs[0][nearest_problem_index]]
-                    # bomb_x = nearest_bomb_position[0]
-
-                    # if bomb_x + 15 > self.rect.left and bomb_x <= self.rect.centerx + 5 and self.rect.left > 10:
-                    #     self.rect.x += self.speed * self.average_delta_time
-
-                    # elif bomb_x - 15 < self.rect.right and bomb_x >= self.rect.centerx - 5 and self.rect.right < self.setup['screen_width'] - 10:
-                    #     self.rect.x -= self.speed * self.average_delta_time
-
                     else:
                         self.move_and_fire()
 
@@ -232,7 +229,7 @@ class Bot(PlayerStarship):
 
         # Highlight the target firing position with a circle
         if self.target_firing_position is not None:
-            highlight_color = (255, 0, 0)
+            highlight_color = (255, 255, 255)
             target_pos = (self.target_firing_position, self.rect.y)
             pygame.draw.circle(self.game.interface.screen, highlight_color, target_pos, 5)
 
@@ -246,3 +243,43 @@ class Bot(PlayerStarship):
                 highlight_color = (0, 255, 0)
                 highlight_rect = bomb.rect.inflate(10, 10)
                 pygame.draw.rect(self.game.interface.screen, highlight_color, highlight_rect, 2)
+
+        if self.nearest_alien is not None:
+            pygame.draw.aaline(
+                surface=self.game.interface.screen,
+                color=(255, 165, 0),
+                start_pos=(self.rect.centerx, self.rect.top - 10),
+                end_pos=(self.nearest_alien.rect.centerx, self.nearest_alien.rect.bottom + 10)
+            )
+        pygame.draw.aaline(
+            surface=self.game.interface.screen,
+            color=(255, 255, 255),
+            start_pos=(self.rect.centerx, self.rect.top),
+            end_pos=(self.target_firing_position, self.rect.y)
+        )
+        if self.nearest_bomb is not None:
+            pygame.draw.aaline(
+                surface=self.game.interface.screen,
+                color=(0, 255, 0),
+                start_pos=(self.rect.centerx, self.rect.top - 10),
+                end_pos=(self.nearest_bomb.rect.centerx, self.nearest_bomb.rect.bottom + 10)
+            )
+        # font = pygame.font.Font(self.setup['font_name'], 20)
+        # font_surface = font.render(str(relative_distance), True, (255, 255, 255))
+        # font_rect = font_surface.get_rect(center=(self.rect.centerx, self.rect.top - 10))
+        # self.game.interface.screen.blit(font_surface, font_rect)
+        font = pygame.font.Font(self.setup['font_name'], 20)
+        stats_text =[
+            f'Alien speed: {self.game.alien_speed}',
+            f'Bot speed: {self.speed}',
+            # f'Target alien: {round(self.nearest_alien.rect.centerx)}',
+            # f'Target position: {round(self.target_firing_position)}',
+            # f'Bot position: {round(self.rect.centerx)}'
+        ]
+        start_y = 300
+        line_spacing = 30
+
+        for i, line in enumerate(stats_text):
+            text = font.render(line, True, (255, 255, 255))
+            text_rect = text.get_rect(center=(100, start_y + i * line_spacing))
+            self.game.interface.screen.blit(text, text_rect)
