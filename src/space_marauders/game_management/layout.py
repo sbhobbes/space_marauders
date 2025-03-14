@@ -20,9 +20,12 @@ class Screen():
         self.background = pygame.transform.scale(self.background_image, (self.setup['screen_width'], self.setup['screen_height']))
         self.button_font = pygame.font.Font(self.setup['font_name'], 50)
         self.title_font = pygame.font.Font(self.setup['font_name'], 100)
-        self.button_font_color = (255, 0, 0)
-        self.button_color = (0, 255, 0)
-        self.title_color = (255, 165, 0)
+        # self.button_font_color = (255, 0, 0)
+        # self.button_color = (0, 255, 0)
+        # self.title_color = (255, 165, 0)
+        self.button_font_color = (255, 250, 205)
+        self.button_color = (0, 128, 128)
+        self.title_color = (0, 128, 128)
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
         self.ORIGIN = (0, 0)
@@ -33,12 +36,25 @@ class Screen():
         return self.screen
 
 
-    def main_menu(self) -> pygame.rect:
+    def check_for_esc(self, game, event):
+        if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE and game.active_game:
+            game.active_game = False
+            game.demo_mode = False
+            game.all_sprites.empty()
+            game.player = None
+            game.aliens = None
+            game.projectiles = None
+            game.alien_projectiles_group.empty()
+            game.player_projectiles_group.empty()
+
+
+    def main_menu(self, all_sprites) -> pygame.rect:
         '''
         Function for the main menu screen, which should be displayed when the user first starts
         or when the escape key is pressed; however, the escape key would pull up the main menu
         in a pause game state.
         '''
+        all_sprites.empty()
         # self.screen.fill((180, 180, 180))
         self.screen.blit(self.background, (0, 0))
         _, new_game_rectangle = self.create_text_box(
@@ -90,7 +106,10 @@ class Screen():
             background_surface = pygame.Surface(surface_dimensions)
             # background_rectangle = surface.get_rect(center = ((self.setup['screen_width'] / 2), (self.setup['screen_height'] / 2)))
             # background_rectangle = surface.get_rect(center=rectangle_center)
+            # background_rectangle = rectangle.inflate(100, 100).copy()
             background_rectangle = rectangle.copy()
+            background_rectangle.inflate_ip(background_padding, background_padding)
+            background_rectangle.center = rectangle_center
             background_surface.fill(background_color)
             self.screen.blit(background_surface, background_rectangle)
             self.screen.blit(surface, rectangle)

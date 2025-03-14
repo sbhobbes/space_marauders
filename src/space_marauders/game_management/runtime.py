@@ -68,8 +68,8 @@ def check_for_quit(event):
         # If QUIT event found, call terminate function
         terminate()
 
-    if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
-        terminate()
+    # if event.type == pygame.KEYUP and event.key == pygame.K_ESCAPE:
+        # terminate()
 
 
 # Quit function

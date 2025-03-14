@@ -44,6 +44,9 @@ class Game():
     def check_events(self):
         for event in pygame.event.get():
             game_management.runtime.check_for_quit(event)
+
+            self.interface.check_for_esc(self, event)
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.new_game_button.collidepoint(pygame.mouse.get_pos()):
                     self.active_game = True
@@ -96,7 +99,7 @@ class Game():
             self.update_score()
 
         else:
-            self.new_game_button, self.demo_mode_button = self.interface.main_menu()
+            self.new_game_button, self.demo_mode_button = self.interface.main_menu(self.all_sprites)
 
         self.check_end_of_level()
         self.check_game_over()
