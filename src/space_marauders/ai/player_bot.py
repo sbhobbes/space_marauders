@@ -76,7 +76,11 @@ class Bot(PlayerStarship):
             elif not self.nearest_alien.alive():
                 self.nearest_alien = None
 
-            nearest_alien_position = alien_positions_matrix[self.nearest_alien_index, :]
+            if self.nearest_alien is not None:
+                nearest_alien_position = alien_positions_matrix[self.nearest_alien_index, :]
+
+            else:
+                nearest_alien_position = alien_positions_matrix[0, :]
 
             # Find distance to all bombs - may not be necessary
             if not bomb_positions_matrix.empty:
@@ -223,15 +227,41 @@ class Bot(PlayerStarship):
     def draw_highlights(self):
         # Highlight the nearest alien with a rectangle
         if self.nearest_alien is not None:
-            highlight_color = (255, 165, 0)
-            highlight_rect = self.nearest_alien.rect.inflate(10, 10)
-            pygame.draw.rect(self.game.interface.screen, highlight_color, highlight_rect, 2)
+            highlight_color = (255, 165, 0)  # Orange
+            highlight_rect = self.nearest_alien.rect.inflate(15, 15)
+            
+            # Create multiple layers of borders with decreasing opacity for glow effect
+            # Outer glow layer (most transparent)
+            glow_surf = pygame.Surface((highlight_rect.width + 20, highlight_rect.height + 20), pygame.SRCALPHA)
+            pygame.draw.rect(glow_surf, (255, 165, 0, 30), 
+                            pygame.Rect(0, 0, highlight_rect.width + 20, highlight_rect.height + 20), 
+                            width=3, border_radius=12)
+            
+            # Middle glow layer
+            pygame.draw.rect(glow_surf, (255, 165, 0, 60), 
+                            pygame.Rect(4, 4, highlight_rect.width + 12, highlight_rect.height + 12), 
+                            width=3, border_radius=11)
+            
+            # Inner glow layer
+            pygame.draw.rect(glow_surf, (255, 165, 0, 90), 
+                            pygame.Rect(8, 8, highlight_rect.width + 4, highlight_rect.height + 4), 
+                            width=2, border_radius=10)
+            
+            # Main border (most opaque)
+            pygame.draw.rect(glow_surf, (255, 165, 0, 255), 
+                            pygame.Rect(10, 10, highlight_rect.width, highlight_rect.height), 
+                            width=2, border_radius=8)
+            
+            # Position and blit the glow surface
+            glow_rect = glow_surf.get_rect(center=highlight_rect.center)
+            self.game.interface.screen.blit(glow_surf, glow_rect)
+            # pygame.draw.rect(self.game.interface.screen, highlight_color, highlight_rect, 2)
 
         # Highlight the target firing position with a circle
-        if self.target_firing_position is not None:
-            highlight_color = (255, 255, 255)
-            target_pos = (self.target_firing_position, self.rect.y)
-            pygame.draw.circle(self.game.interface.screen, highlight_color, target_pos, 5)
+        # if self.target_firing_position is not None:
+        #     highlight_color = (255, 255, 255)
+        #     target_pos = (self.target_firing_position, self.rect.y)
+        #     pygame.draw.circle(self.game.interface.screen, highlight_color, target_pos, 5)
 
         # Highlight the nearest problem bomb with a rectangle
         # if self.nearest_bomb is not None:
@@ -244,26 +274,26 @@ class Bot(PlayerStarship):
                 highlight_rect = bomb.rect.inflate(10, 10)
                 pygame.draw.rect(self.game.interface.screen, highlight_color, highlight_rect, 2)
 
-        if self.nearest_alien is not None:
-            pygame.draw.aaline(
-                surface=self.game.interface.screen,
-                color=(255, 165, 0),
-                start_pos=(self.rect.centerx, self.rect.top - 10),
-                end_pos=(self.nearest_alien.rect.centerx, self.nearest_alien.rect.bottom + 10)
-            )
-        pygame.draw.aaline(
-            surface=self.game.interface.screen,
-            color=(255, 255, 255),
-            start_pos=(self.rect.centerx, self.rect.top),
-            end_pos=(self.target_firing_position, self.rect.y)
-        )
-        if self.nearest_bomb is not None:
-            pygame.draw.aaline(
-                surface=self.game.interface.screen,
-                color=(0, 255, 0),
-                start_pos=(self.rect.centerx, self.rect.top - 10),
-                end_pos=(self.nearest_bomb.rect.centerx, self.nearest_bomb.rect.bottom + 10)
-            )
+        # if self.nearest_alien is not None:
+        #     pygame.draw.aaline(
+        #         surface=self.game.interface.screen,
+        #         color=(255, 165, 0),
+        #         start_pos=(self.rect.centerx, self.rect.top - 10),
+        #         end_pos=(self.nearest_alien.rect.centerx, self.nearest_alien.rect.bottom + 10)
+        #     )
+        # pygame.draw.aaline(
+        #     surface=self.game.interface.screen,
+        #     color=(255, 255, 255),
+        #     start_pos=(self.rect.centerx, self.rect.top),
+        #     end_pos=(self.target_firing_position, self.rect.y)
+        # )
+        # if self.nearest_bomb is not None:
+        #     pygame.draw.aaline(
+        #         surface=self.game.interface.screen,
+        #         color=(0, 255, 0),
+        #         start_pos=(self.rect.centerx, self.rect.top - 10),
+        #         end_pos=(self.nearest_bomb.rect.centerx, self.nearest_bomb.rect.bottom + 10)
+        #     )
         # font = pygame.font.Font(self.setup['font_name'], 20)
         # font_surface = font.render(str(relative_distance), True, (255, 255, 255))
         # font_rect = font_surface.get_rect(center=(self.rect.centerx, self.rect.top - 10))

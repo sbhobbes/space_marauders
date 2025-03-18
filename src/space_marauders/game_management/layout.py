@@ -18,7 +18,7 @@ class Screen():
         self.background_image = space_marauders.utils.helpers.load_asset(self.setup['background_image'])
         # self.background_image.set_alpha(150)
         self.background = pygame.transform.scale(self.background_image, (self.setup['screen_width'], self.setup['screen_height']))
-        self.button_font = pygame.font.Font(self.setup['font_name'], 50)
+        self.button_font = pygame.font.Font(self.setup['font_name'], 30)
         self.title_font = pygame.font.Font(self.setup['font_name'], 100)
         # self.button_font_color = (255, 0, 0)
         # self.button_color = (0, 255, 0)
@@ -32,6 +32,7 @@ class Screen():
         self.SCORE_FONT = pygame.font.Font(self.setup['font_name'], 20)
         self.new_game_button_state = 'normal'
         self.demo_mode_button_state = 'normal'
+        self.demo_mode_checkbox = self.create_demo_mode_checkbox()
 
 
     def get_screen(self):
@@ -67,14 +68,10 @@ class Screen():
             background=True,
             background_color=self.button_color
         )
-        _, demo_mode_rectangle = self.create_text_box(
-            font=self.button_font,
-            text='Demo Mode',
-            font_color=self.button_font_color,
-            rectangle_center=(self.setup['screen_width'] / 2, self.setup['screen_height'] / 5 * 3),
-            background=True,
-            background_color=self.button_color
-        )
+
+        self.demo_mode_checkbox.draw(self.screen)
+        self.screen.blit(self.demo_mode_label, self.demo_mode_label_rect)
+
         self.create_text_box(
             font=self.title_font,
             text='Space Marauders',
@@ -82,7 +79,27 @@ class Screen():
             rectangle_center=(self.setup['screen_width'] / 2, self.setup['screen_height'] / 6)
         )
 
-        return new_game_rectangle, demo_mode_rectangle
+        return new_game_rectangle#, demo_mode_rectangle
+
+
+    def create_demo_mode_checkbox(self):
+        text_position_x = 150
+        text_position_y = self.setup['screen_height'] // 15 * 14
+
+        font = pygame.font.Font(None, 36)
+        self.demo_mode_label = font.render('Demo Mode', True, self.button_font_color)
+        self.demo_mode_label_rect = self.demo_mode_label.get_rect()
+
+        self.demo_mode_label_rect.center = (text_position_x, text_position_y)
+
+        checkbox_size = 30
+        checkbox_x = self.demo_mode_label_rect.left - checkbox_size - 10
+        checkbox_y = self.demo_mode_label_rect.centery - checkbox_size // 2
+
+        checkbox = Checkbox(checkbox_x, checkbox_y)
+        checkbox.draw(self.screen)
+
+        return checkbox
 
 
     def create_text_box(
@@ -104,39 +121,73 @@ class Screen():
 
         surface = font.render(text, True, font_color)
         rectangle = surface.get_rect(center=rectangle_center)
-        print(self.new_game_button_state)
+
         if self.new_game_button_state == 'normal' and background_color is not None:
-            self.draw_gradient_button(surface, rectangle, normal_background_color, font_color, normal_background_color)
+            self.draw_gradient_button(
+                surface=surface,
+                background_padding=background_padding,
+                rectangle=rectangle,
+                background_color=normal_background_color
+            )
 
         elif self.new_game_button_state == 'hover' and background_color is not None:
-            self.draw_gradient_button(surface, rectangle, hover_backround_color, font_color, hover_backround_color)
+            self.draw_gradient_button(
+                surface=surface,
+                background_padding=background_padding,
+                rectangle=rectangle,
+                background_color=hover_backround_color
+            )
 
         elif self.new_game_button_state == 'pressed' and background_color is not None:
-            self.draw_gradient_button(surface, rectangle, pressed_background_color, font_color, pressed_background_color)
+            self.draw_gradient_button(
+                surface=surface,
+                background_padding=background_padding,
+                rectangle=rectangle,
+                background_color=pressed_background_color
+            )
 
         self.screen.blit(surface, rectangle)
+
         return surface, rectangle
+
+
+    def draw_gradient_button(self, surface, background_padding, rectangle, background_color, border_radius=10):
+        # Get dimensions of the text surface
+        text_width = surface.get_width()
+        text_height = surface.get_height()
         
-        # if background:
-        #     surface_width = surface.get_width()
-        #     surface_height = surface.get_height()
-        #     surface_dimensions = (surface_width + background_padding, surface_height + background_padding)
-        #     background_surface = pygame.Surface(surface_dimensions)
-        #     background_rectangle = rectangle.copy()
-        #     self.screen.blit(background_surface, background_rectangle)
-        #     self.screen.blit(surface, rectangle)
-        #     return background_surface, background_rectangle
-
-        # else:
-        #     self.screen.blit(surface, rectangle)
-        #     return surface, rectangle
-
-
-    def draw_gradient_button(self, surface, rect, color1, color2, border_color, border_width=2):
-        pygame.draw.rect(surface, color1, rect)
-        gradient_rect = pygame.Rect(rect.x, rect.y, rect.width, rect.height // 2)
-        pygame.draw.rect(surface, color2, gradient_rect)
-        pygame.draw.rect(surface, border_color, rect, border_width)
+        # Set explicit padding amounts
+        horizontal_padding = 30  # Total horizontal padding (15px on each side)
+        vertical_padding = 20    # Total vertical padding (10px on each side)
+        
+        # Calculate button dimensions based on text size plus padding
+        button_width = text_width + horizontal_padding
+        button_height = text_height + vertical_padding
+        
+        # Create button surface with transparency
+        button_surface = pygame.Surface((button_width, button_height), pygame.SRCALPHA)
+        
+        # Draw rounded rectangle on button surface
+        pygame.draw.rect(
+            button_surface,
+            background_color,
+            pygame.Rect(0, 0, button_width, button_height),
+            border_radius=border_radius
+        )
+        
+        # Calculate position to center the text on the button
+        text_x = (button_width - text_width) // 2
+        text_y = (button_height - text_height) // 2
+        
+        # Blit the text onto the button surface
+        button_surface.blit(surface, (text_x, text_y))
+        
+        # Blit the entire button onto the screen
+        # Use the center of the original rectangle to position the new button
+        original_center = rectangle.center
+        new_rect = button_surface.get_rect(center=original_center)
+        
+        self.screen.blit(button_surface, new_rect)
 
 
     def blit(self, *args, **kwargs):
@@ -203,3 +254,40 @@ class Screen():
             self.screen.blit(text, text_rect)
 
         pygame.display.flip()
+
+
+class Checkbox:
+    def __init__(self, x, y, size=30, color=(255, 255, 255), checked=False):
+        self.rect = pygame.Rect(x, y, size, size)
+        self.color = color
+        self.checked = checked
+        self.size = size
+        self.check_thickness = max(2, int(size / 10))
+
+
+    def draw(self, surface):
+        self.surface = surface
+        pygame.draw.rect(surface, self.color, self.rect, 2)
+
+        if self.checked:
+            start_pos1 = (self.rect.x + self.size * 0.2, self.rect.y + self.size * 0.2)
+            end_pos1 = (self.rect.x + self.size * 0.8, self.rect.y + self.size * 0.8)
+            start_pos2 = (self.rect.x + self.size * 0.8, self.rect.y + self.size * 0.2)
+            end_pos2 = (self.rect.x + self.size * 0.2, self.rect.y + self.size * 0.8)
+
+            pygame.draw.line(surface, self.color, start_pos1, end_pos1, self.check_thickness)
+            pygame.draw.line(surface, self.color, start_pos2, end_pos2, self.check_thickness)
+
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.rect.collidepoint(event.pos):
+                print(self.checked)
+                self.checked = not self.checked
+                self.draw(self.surface)
+
+                return True
+
+        else:
+            self.draw(self.surface)
+            return False
