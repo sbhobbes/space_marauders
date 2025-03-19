@@ -227,14 +227,14 @@ class Screen():
 
         pygame.display.flip()
 
-        pygame.time.delay(2000)
+        pygame.time.delay(5000)
 
         level += 1
 
         return level
 
 
-    def show_game_over(self, level, player):
+    def show_game_over(self, level, player, all_sprites):
         game_over_text = [
             'Game Over!',
             f'Highest level completed: {level - 1}',
@@ -254,6 +254,12 @@ class Screen():
             self.screen.blit(text, text_rect)
 
         pygame.display.flip()
+
+        # pygame.time.delay(5000)
+
+        # escape_event = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_ESCAPE, 'mod': 0})
+        # pygame.event.post(escape_event)
+        # self.main_menu(all_sprites)
 
 
 class Checkbox:

@@ -184,6 +184,10 @@ class Game():
         accuracy_rectangle = accuracy_surface.get_rect(topleft = (self.setup['screen_width'] / 10 * 8, 8))
         self.SCREEN.blit(accuracy_surface, accuracy_rectangle)
 
+        level_surface = self.SCORE_FONT.render(f'Level {self.level}', True, self.WHITE)
+        level_rectangle = level_surface.get_rect(topleft=(25, self.setup['screen_height'] // 20 * 19))
+        self.SCREEN.blit(level_surface, level_rectangle)
+
 
     def check_end_of_level(self):
         if not self.aliens and self.active_game:
@@ -195,6 +199,7 @@ class Game():
     def reset_for_next_level(self):
         self.level_completed = False
         self.all_sprites.empty()
+        self.alien_projectiles_group.empty()
 
         self.alien_speed = round((self.alien_speed * 1.1), 2)
         self.player.reset_position()
@@ -206,7 +211,12 @@ class Game():
 
     def check_game_over(self):
         if self.game_over and not self.level_completed:
-            self.interface.show_game_over(self.level, self.player)
+            self.active_game = False
+            self.demo_mode = False
+            self.game_over = False
+            # self.all_sprites.empty()
+            # self.alien_projectiles_group.empty()
+            self.interface.show_game_over(self.level, self.player, self.all_sprites)
 
 
     def run(self):
