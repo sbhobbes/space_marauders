@@ -42,8 +42,8 @@ class Game():
 
 
     def check_events(self):
-        hover_color = ()
-        normal_color = ()
+        # hover_color = ()
+        # normal_color = ()
 
         for event in pygame.event.get():
             game_management.runtime.check_for_quit(event)
@@ -57,11 +57,11 @@ class Game():
                     if self.new_game_button.collidepoint(event.pos):
                         if self.interface.new_game_button_state != 'pressed':
                             self.interface.new_game_button_state = 'hover'
-                            current_color = hover_color
+                            # current_color = hover_color
 
                     else:
                         self.interface.new_game_button_state = 'normal'
-                        new_game_current_color = normal_color
+                        # new_game_current_color = normal_color
 
                     # if self.demo_mode_button.collidepoint(event.pos):
                     #     if self.interface.demo_mode_button_state != 'pressed':
@@ -84,10 +84,13 @@ class Game():
 
                         if self.interface.demo_mode_checkbox.checked:
                             self.demo_mode = True
-                            self.active_game = True
 
-                        else:
-                            self.active_game = True
+                        self.active_game = True
+                        self.level = 1
+                        self.alien_speed = self.setup['alien']['ship_speed']
+
+                        # else:
+                        #     self.active_game = True
 
                     # elif self.demo_mode_button.collidepoint(event.pos):
                     #     self.interface.demo_mode_button_state = 'normal'
@@ -101,7 +104,7 @@ class Game():
     def check_game_state(self):
         if self.active_game:# or self.demo_mode:
             if not self.aliens:
-                self.aliens = game_management.deploy.create_enemies(object_count=10, projectile_group=self.alien_projectiles_group)
+                self.aliens = game_management.deploy.create_enemies(object_count=18, projectile_group=self.alien_projectiles_group)
                 self.all_sprites.add(self.aliens)
 
             self.all_sprites.add(self.alien_projectiles_group)
@@ -198,6 +201,7 @@ class Game():
 
     def reset_for_next_level(self):
         self.level_completed = False
+        self.player.reset_level_score()
         self.all_sprites.empty()
         self.alien_projectiles_group.empty()
 
@@ -214,9 +218,16 @@ class Game():
             self.active_game = False
             self.demo_mode = False
             self.game_over = False
-            # self.all_sprites.empty()
             # self.alien_projectiles_group.empty()
-            self.interface.show_game_over(self.level, self.player, self.all_sprites)
+            # self.alien_projectiles_group.empty()
+            self.interface.show_game_over(self.level, self.player)
+            self.all_sprites.empty()
+            self.player = None
+            self.aliens = None
+            self.projectiles = None
+            self.alien_projectiles_group.empty()
+            self.player_projectiles_group.empty()
+            self.interface.main_menu(self.all_sprites)
 
 
     def run(self):

@@ -19,14 +19,24 @@ class PlayerStarship(BaseStarship):
         self.aliens_hit = 0
         self.bombs_hit = 0
         self.shooting = False
+        self.level_score = 0
 
 
     def get_current_score(self):
         return self.current_score
 
 
+    def get_level_score(self):
+        return self.level_score
+
+
+    def reset_level_score(self):
+        self.level_score = 0
+
+
     def update_score(self, amount_to_add):
         self.current_score += amount_to_add
+        self.level_score += amount_to_add
 
 
     def update_aliens_hit(self):

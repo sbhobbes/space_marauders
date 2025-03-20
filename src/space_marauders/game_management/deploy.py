@@ -19,7 +19,7 @@ def create_starship(projectile_group: pygame.sprite.Group, game):
     if game is not None:
         player_ship = ai.player_bot.Bot(
             x=float(setup['screen_width'] / 2),
-            y=float(setup['screen_height'] / 8 * 7.5),
+            y=float(setup['screen_height'] / 8 * 7),
             projectile_group=projectile_group,
             game=game
         )
@@ -27,7 +27,7 @@ def create_starship(projectile_group: pygame.sprite.Group, game):
     else:
         player_ship = player.player_starship.PlayerStarship(
             x=float(setup['screen_width'] / 2),
-            y=float(setup['screen_height'] / 8 * 7.5),
+            y=float(setup['screen_height'] / 8 * 7),
             projectile_group=projectile_group
         )
 
@@ -46,8 +46,9 @@ def create_enemies(
     alien_group = pygame.sprite.Group()
     for i in range(object_count):
         alien = aliens.alien_starship.AlienStarship(
-            x=100.0 + i * 100.0,
-            y=50.0,
+            # x=100.0 + i * 100.0,
+            x=(1920 // (object_count + 2)) * i + 200,
+            y=100.0,
             projectile_group=projectile_group
         )
         alien_group.add(alien)

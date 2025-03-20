@@ -1,5 +1,7 @@
-screen_width: 1200.0
-screen_height: 800.0
+# screen_width: 1200.0
+# screen_height: 800.0
+screen_width: 1920.0
+screen_height: 1080.0
 fps: 60
 font_name: 'freesansbold.ttf'
 background_image: 'background_space.png'
@@ -11,8 +13,8 @@ player:
   ship_speed: 160
   ship_image_path: sky_blanc_2.png
   projectile_image_path: 'laser_03.png'
-  projectile_width: 5
-  projectile_length: 40
+  projectile_width: 6
+  projectile_length: 50
   # projectile_speed: 650
   projectile_speed: 520
 

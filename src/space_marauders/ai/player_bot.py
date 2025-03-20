@@ -11,13 +11,13 @@ class Bot(PlayerStarship):
         self.game = game
         self.current_direction = None
         self.move_timer = 0
-        self.move_cooldown = 60
+        self.move_cooldown = 20
         self.position_vector = np.array([[self.rect.centerx, self.rect.top]])
         self.laser_velocity = np.array([-1, self.game.setup['player']['projectile_speed']])
         self.setup = helpers.get_metadata('setup.yaml')
         self.average_delta_time = 1 / self.setup['fps']
         # self.reaction_time = int(0.2 * self.setup['fps'])
-        self.current_score = 0
+        # self.current_score = 0
         self.shots_fired = 0
         self.aliens_hit = 0
         self.target_firing_position = None
@@ -26,6 +26,7 @@ class Bot(PlayerStarship):
         self.nearest_alien_index = None
         self.nearest_alien = None
         self.previous_frame_alien_count = 0
+        self.retarget_cooldown = 0
 
 
     def update(self, **kwargs):
@@ -38,6 +39,8 @@ class Bot(PlayerStarship):
             self.problem_bombs = None
             # self.nearest_alien = None
             self.position_vector = np.array([[self.rect.centerx, self.rect.top]])
+            self.move_timer += 1
+            self.retarget_cooldown += 1
 
             for alien in self.game.aliens:
                 x = alien.rect.centerx
@@ -70,9 +73,10 @@ class Bot(PlayerStarship):
             bot_to_aliens_difference = DifferenceMatrix(alien_positions_matrix, bot_position_times_aliens)
             bot_to_aliens_distance = DistanceMatrix(bot_to_aliens_difference).get_distances()
 
-            if self.nearest_alien is None:
+            if self.nearest_alien is None or (np.argmin(bot_to_aliens_distance) != self.nearest_alien_index and self.retarget_cooldown > 100):
                 self.nearest_alien_index = np.argmin(bot_to_aliens_distance)
                 self.nearest_alien = self.game.aliens.sprites()[self.nearest_alien_index]
+                self.retarget_cooldown = 0
 
             # elif not self.nearest_alien.alive():
             elif alien_positions_matrix.shape[0] < self.previous_frame_alien_count or not self.nearest_alien.alive():
@@ -170,12 +174,41 @@ class Bot(PlayerStarship):
                     move_right = 0
                     move_left = 0
 
+                    # Track the closest bomb from each direction
+                    # closest_left_bomb_distance = float('inf')
+                    # closest_right_bomb_distance = float('inf')
+                    # closest_vertical_bomb_distance = float('inf')
+
                     # Loop through all of the problem bombs
                     for i in range(len(self.problem_bombs[0])):
                         bomb_index = self.problem_bombs[0][i]
                         bomb_position = bomb_positions_matrix[bomb_index, :]
                         bomb = self.game.alien_projectiles_group.sprites()[bomb_index]
                         bomb_x = bomb_position[0]
+                        # bomb_y = bomb_position[1]
+
+                        # Calculate horizontal and vertical distance
+                        # h_distance = abs(bomb_x - self.rect.centerx)
+                        # v_distance = self.rect.top - bomb_y
+
+                        # If bomb is directly above/below (Or nearly so)
+                        # if h_distance < 20:
+                        #     if v_distance < closest_vertical_bomb_distance:
+                        #         closest_vertical_bomb_distance = v_distance
+
+                        # If bomb is to the left
+                        # elif bomb_x < self.rect.centerx:
+                        #     h_distance = self.rect.centerx - bomb_x
+                        #     if h_distance < closest_left_bomb_distance:
+                        #         closest_left_bomb_distance = h_distance
+                        #         move_right += h_distance / 10 # Weight by distance, where closer bombs have higher weight
+
+                        # If bomb is to the right
+                        # elif bomb_x > self.rect.centerx:
+                        #     h_distance = bomb_x - self.rect.centerx
+                        #     if h_distance < closest_right_bomb_distance:
+                        #         closest_right_bomb_distance = h_distance
+                        #         move_left += h_distance / 10 # Weight by distance, where closer bombs have higher weight
 
                         # If bomb is to the left and bot can move right
                         if bomb_x + 20 > self.rect.left and bomb_x <= self.rect.centerx + 5 and self.rect.left > 10:
@@ -185,21 +218,64 @@ class Bot(PlayerStarship):
                         elif bomb_x - 20 < self.rect.right and bomb_x >= self.rect.centerx - 5 and self.rect.right < self.setup['screen_width'] - 10:
                             move_left += 1
 
+                    # Determine movement based on weighted scores and screen boundaries
+                    # can_move_left = self.rect.left > 10
+                    # can_move_right = self.rect.right < self.setup['screen_width'] - 10
+
+                    # # If bombs on both sides, choose the safer direction
+                    # if move_right > 0 and move_left > 0:
+                    #     # If we can't move in one direction, automatically pick the other
+                    #     if not can_move_left:
+                    #         move_right = move_left + 1
+                    #     elif not can_move_right:
+                    #         move_left = move_right + 1
+                    #     # If close to screen edge, favor moving away from edge
+                    #     elif self.rect.left < 50:
+                    #         move_right *= 1.5
+                    #     elif self.rect.right > self.setup['screen_width'] - 50:
+                    #         move_left *= 1.5
+
                     # Set nearest bomb for reference (Might be useful elsewhere)
                     nearest_problem_index = np.argmin(bot_to_bombs_distance[self.problem_bombs])
                     nearest_bomb_position = bomb_positions_matrix[self.problem_bombs[0][nearest_problem_index], :]
                     self.nearest_bomb = self.game.alien_projectiles_group.sprites()[self.problem_bombs[0][nearest_problem_index]]
 
                     # Determine final movement direction based on all problem bombs
-                    if move_right > move_left:
-                        self.rect.x += self.speed * self.average_delta_time
-                    elif move_left > move_right:
-                        self.rect.x -= self.speed * self.average_delta_time
-                    elif move_right > 0:
-                        if self.rect.left < (self.setup['screen_width'] - self.rect.right):
-                            self.rect.x -= self.speed * self.average_delta_time
-                        else:
+                    if self.move_timer:# >= self.move_cooldown:
+                        if move_right > move_left:# and can_move_right:
                             self.rect.x += self.speed * self.average_delta_time
+                            self.current_direction = 'right'
+                            self.move_timer = 0
+
+                        elif move_left > move_right:# and can_move_left:
+                            self.rect.x -= self.speed * self.average_delta_time
+                            self.current_direction = 'left'
+                            self.move_timer = 0
+
+                        # elif can_move_right and not can_move_left:
+                        #     # If we can only go right, go right
+                        #     self.rect.x += self.speed * self.average_delta_time
+                        #     self.current_direction = 'right'
+                        #     self.move_timer = 0
+
+                        # elif can_move_left and not can_move_right:
+                        #     # If we can only go left, go left
+                        #     self.rect.x -= self.speed * self.average_delta_time
+                        #     self.current_direction = 'left'
+                        #     self.move_timer = 0
+
+                        elif move_right > 0:
+                            if self.rect.left < (self.setup['screen_width'] - self.rect.right):
+                                self.rect.x -= self.speed * self.average_delta_time
+                            else:
+                                self.rect.x += self.speed * self.average_delta_time
+
+                    # else:
+                    #     if self.current_direction == 'right':# and can_move_right:
+                    #         self.rect.x += self.speed * self.average_delta_time
+
+                    #     elif self.current_direction == 'left':# and can_move_left:
+                    #         self.rect.x -= self.speed * self.average_delta_time
 
                     else:
                         self.move_and_fire()

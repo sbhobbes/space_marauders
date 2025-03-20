@@ -14,9 +14,12 @@ import space_marauders
 class Screen():
     def __init__(self):
         self.setup = space_marauders.utils.helpers.get_metadata('setup.yaml')
-        self.screen = pygame.display.set_mode((self.setup['screen_width'], self.setup['screen_height']), pygame.SRCALPHA)
-        self.background_image = space_marauders.utils.helpers.load_asset(self.setup['background_image'])
-        # self.background_image.set_alpha(150)
+        self.screen = pygame.display.set_mode((self.setup['screen_width'], self.setup['screen_height']), pygame.SRCALPHA | pygame.RESIZABLE)
+        # self.screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF)
+        # screen_info = pygame.display.Info()
+        # self.screen = pygame.display.set_mode((screen_info.current_w - 10, screen_info.current_h - 70), pygame.SRCALPHA | pygame.RESIZABLE)
+        self.background_image = space_marauders.utils.helpers.load_asset(self.setup['background_image']).convert_alpha()
+        self.background_image.set_alpha(210)
         self.background = pygame.transform.scale(self.background_image, (self.setup['screen_width'], self.setup['screen_height']))
         self.button_font = pygame.font.Font(self.setup['font_name'], 30)
         self.title_font = pygame.font.Font(self.setup['font_name'], 100)
@@ -195,7 +198,7 @@ class Screen():
 
 
     def refresh_screen(self):
-        self.screen.fill((180, 180, 180))
+        self.screen.fill((0, 0, 0))
         self.blit(self.background, self.ORIGIN)
 
 
@@ -209,7 +212,7 @@ class Screen():
     def show_level_complete(self, player, level):
         splash_text =[
             f'Level {level} completed!',
-            f'Level score: {player.get_current_score()}',
+            f'Level score: {player.get_level_score()}',
             f'Total score: {player.get_current_score()}',
             f'Shots fired: {player.shots_fired}',
             f'Alien ships hit: {player.aliens_hit}',
@@ -234,7 +237,7 @@ class Screen():
         return level
 
 
-    def show_game_over(self, level, player, all_sprites):
+    def show_game_over(self, level, player):
         game_over_text = [
             'Game Over!',
             f'Highest level completed: {level - 1}',
@@ -255,7 +258,7 @@ class Screen():
 
         pygame.display.flip()
 
-        # pygame.time.delay(5000)
+        pygame.time.delay(5000)
 
         # escape_event = pygame.event.Event(pygame.KEYDOWN, {'key': pygame.K_ESCAPE, 'mod': 0})
         # pygame.event.post(escape_event)
@@ -288,7 +291,6 @@ class Checkbox:
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
-                print(self.checked)
                 self.checked = not self.checked
                 self.draw(self.surface)
 

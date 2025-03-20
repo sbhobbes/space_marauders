@@ -24,7 +24,7 @@ class BaseStarship(pygame.sprite.Sprite):
         self.starting_x = x
         self.image = load_asset(self.setup[faction]['ship_image_path'], base_path='ships')
         self.image = pygame.transform.scale(self.image, (50, 50))
-        self.image = self.brighten_image(self.image, 50)
+        self.image = self.brighten_image(self.image, 75)
         self.image = self.add_outline(self.image, (80, 80, 80), 1)
         self.rect = self.image.get_rect(center=(x, y))
 
