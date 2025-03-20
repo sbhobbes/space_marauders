@@ -241,16 +241,16 @@ class Bot(PlayerStarship):
                     self.nearest_bomb = self.game.alien_projectiles_group.sprites()[self.problem_bombs[0][nearest_problem_index]]
 
                     # Determine final movement direction based on all problem bombs
-                    if self.move_timer:# >= self.move_cooldown:
-                        if move_right > move_left:# and can_move_right:
-                            self.rect.x += self.speed * self.average_delta_time
-                            self.current_direction = 'right'
-                            self.move_timer = 0
+                    # if self.move_timer >= self.move_cooldown:
+                    if move_right > move_left:# and can_move_right:
+                        self.rect.x += self.speed * self.average_delta_time
+                        self.current_direction = 'right'
+                        self.move_timer = 0
 
-                        elif move_left > move_right:# and can_move_left:
-                            self.rect.x -= self.speed * self.average_delta_time
-                            self.current_direction = 'left'
-                            self.move_timer = 0
+                    elif move_left > move_right:# and can_move_left:
+                        self.rect.x -= self.speed * self.average_delta_time
+                        self.current_direction = 'left'
+                        self.move_timer = 0
 
                         # elif can_move_right and not can_move_left:
                         #     # If we can only go right, go right
@@ -264,11 +264,11 @@ class Bot(PlayerStarship):
                         #     self.current_direction = 'left'
                         #     self.move_timer = 0
 
-                        elif move_right > 0:
-                            if self.rect.left < (self.setup['screen_width'] - self.rect.right):
-                                self.rect.x -= self.speed * self.average_delta_time
-                            else:
-                                self.rect.x += self.speed * self.average_delta_time
+                    elif move_right > 0:
+                        if self.rect.left < (self.setup['screen_width'] - self.rect.right):
+                            self.rect.x -= self.speed * self.average_delta_time
+                        else:
+                            self.rect.x += self.speed * self.average_delta_time
 
                     # else:
                     #     if self.current_direction == 'right':# and can_move_right:
@@ -277,8 +277,8 @@ class Bot(PlayerStarship):
                     #     elif self.current_direction == 'left':# and can_move_left:
                     #         self.rect.x -= self.speed * self.average_delta_time
 
-                    else:
-                        self.move_and_fire()
+                    # else:
+                    #     self.move_and_fire()
 
                 else:
                     self.move_and_fire()
